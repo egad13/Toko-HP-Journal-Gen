@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tokota HP Journal Generator</title>
+  <link rel="stylesheet" href="view.css">
+  <script type="text/javascript" src="app/tokohp.js"></script>
+  <script type="text/javascript" src="lib/accordian.js"></script>
+</head>
+
+<!--
+
+LEGEND OF REQUIRED HTML ID'S
+
+filepick - the filepicker input element
+
+names - the dropdown box that will contain toko names
+sub - the checkbox indicating born submissive or not
+block - the checkbox indicating to use blockquotes or not
+act - the checkbox indicating to use activity headers or not
+
+genhtml - the button that will make the program gen and display a toko's html
+output - the text area that will contain the generated html.
+
+-->
+
+
+<body>
+  <h1>Tokota HP Journal Generator</h1>
+  <form id="form">
+    <input id="filepick" type="file" accept=".csv" onchange="loadFile(this)"/>
+    <br/><label for="filepick">Choose a File</label>
+  </form>
+
+  <div>
+    <select id="names"></select>
+    <br/>
+    <span class="chk">
+      <input id="sub" type="checkbox">Born submissive</input>
+    </span>
+    <span class="chk">
+      <input id="block" type="checkbox">Use blockquotes</input>
+    </span>
+    <span class="chk">
+      <input id="act" type="checkbox">Use activity headers</input>
+    </span>
+    <br/>
+  </div>
+
+  <div>
+    <button id="genhtml" onclick="generate()" disabled>Generate HTML</button>
+  </div>
+
+  <textarea readonly id="output">Pick a file to begin.</textarea>
+
+  <hr/>
+
+  <div>
+    <button class="accordion">How do I use this?</button>
+    <div class="panel" style="display:none;">
+      <p>
+        This generator lets you log HP for ALL your Tokotas in a single
+        spreadsheet, and then generate an HP journal with one click! You just
+        have to make sure you have your spreadsheet formatted like the template,
+        and you're good to go.
+      </p>
+      <hr/>
+      <button class="accordion">Creating the Spreadsheet</button>
+      <div class="panel" style="display:none;">
+        <p>
+          Your spreadsheet should look like this. Always have the first row be
+          headers, and make sure there are no empty rows in the middle of the
+          file.
+        </p>
+        <img src="images/csvtemplate.png"/>
+        <p>
+          To fill out the sheet, you use a new row for each deviation. For each row, you:
+        </p>
+        <ol>
+          <li>
+            In the Thumb Code column, fill out the thumb code for the deviation
+            you wish to include.
+          </li>
+          <li>
+            The the Breakdown column, fill out the full HP breakdown for the piece.
+            <br/>
+            <span class="footer">
+              Note: If different tokotas in the same piece have different HP counts,
+              you may enter the same deviation multiple times into the sheet (just add
+              a new row with the same thumb code). Only put the individual tokotas in
+              the row for the count that applies to them.
+            </span>
+          </li>
+          <li>Enter the Total HP for the piece</li>
+          <li>
+            The Sub-Category column is optional. If you would like to have
+            your HP tracker broken into subsections by activity, art type, etc,
+            you can add your own subtitles in here. (ex. Exploring, Hunting,
+            Misc, or Fullbody, Headshot, etc)
+          </li>
+          <li>
+            Enter the Tokota's names in the Toko columns, filling in from the left.
+            Leave any extras spaces blank.
+            <br/>
+            <span class="footer">
+              Note: You can use any format for the tokota's names (you
+              could even use their IDs) that you want. Just make sure to use
+              the same name consistently for a single tokota - do not for
+              example use different nicknames like 'Bob' and 'Bobby', as the
+              generator will think they are 2 different tokotas.
+            </span>
+          </li>
+        </ol>
+        <p>
+          Do not use commas or special characters anywhere in the sheet.
+        </p>
+        <p>
+          Now, just save your spreadsheet as a .csv file, and you're ready to go!
+        </p>
+      </div>
+
+      <hr/>
+
+      <button class="accordion">Using the Generator</button>
+      <div class="panel" style="display:none;">
+         <p>To run the generator, simply:</p>
+        <ol>
+          <li>Select your CSV file.</li>
+          <li>Select the name of the tokota you would like to generate a journal for.</li>
+          <li>If your tokota was born submissive, check the 'Born submissive' box. Otherwise, leave it unchecked.</li>
+          <li>If your journal skin has coded boxes that use the blockquote tag, check the 'Use blockquotes' box. Otherwise, leave it unchecked.</li>
+          <li>If you used sub-categories, check the 'Use activity headers' box. Otherwise, leave it unchecked.</li>
+          <li>Press Generate HTML and copy the code.</li>
+          <li>Create or edit a deviantART or stash journal, go to Edit > Switch to HTML mode, and paste in your generated HTML.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="footer">
+    Latest Update: 3 Dec, 2017, 5:25 PM EST
+  </div>
+
+</body>
+
+</html>
