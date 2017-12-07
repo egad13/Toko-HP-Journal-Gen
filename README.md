@@ -4,6 +4,7 @@ An HTML generator custom made for the Tokotas ARPG. This simple-to-use website w
 
 ## Getting Started
 
+This project is live as a website! Simply visit this link to use it: [Click Me!](https://ericag13.github.io/Toko-HP-Journal-Gen/)
 
 Or, if you really wanted, you could download the project and open index.html in your browser when you want to use it. That's also an option.
 
