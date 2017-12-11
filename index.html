@@ -1,70 +1,75 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Tokota HP Journal Generator</title>
   <link rel="stylesheet" href="view.css">
-  <script type="text/javascript" src="app/tokohp.js"></script>
   <script type="text/javascript" src="lib/accordian.js"></script>
+  <script type="text/javascript" src="app/tokohp.js"></script>
 </head>
-
-<!--
-
-LEGEND OF REQUIRED HTML ID'S
-
-filepick - the filepicker input element
-
-names - the dropdown box that will contain toko names
-sub - the checkbox indicating born submissive or not
-block - the checkbox indicating to use blockquotes or not
-act - the checkbox indicating to use activity headers or not
-
-genhtml - the button that will make the program gen and display a toko's html
-output - the text area that will contain the generated html.
-
--->
 
 
 <body>
+
+  <!-- Site Introduction -->
   <h1>Tokota HP Journal Generator</h1>
   <p>
     This simple-to-use website will take your database of Tokotas, and allow you
-    to generate a pre-formatted HP Journal for any of your Tokotas with the click
-    of a button! It should save you lots of time and maybe even some visits to
-    corrections.
+    to generate a pre-formatted HP Journal for any of your Tokotas with the
+    click of a button! It should save you lots of time and maybe even some
+    visits to corrections.
   </p>
   <p>
-    If you find any bugs, please submit an issue on <a href="https://github.com/EricaG13/Toko-HP-Journal-Gen/issues">the project's GitHub page.</a>
+    If you find any bugs, please open an issue on
+    <a href="https://github.com/EricaG13/Toko-HP-Journal-Gen/issues">
+      the project's GitHub page.
+    </a>
   </p>
-  <hr/>
-  <form id="form">
-    <input id="filepick" type="file" accept=".csv" onchange="loadFile(this)"/>
-    <label for="filepick">Choose a File</label>
-  </form>
-
-  <div>
-    <select id="names"></select>
-    <br/>
-    <span class="chk">
-      <input id="sub" type="checkbox">Born submissive</input>
-    </span>
-    <span class="chk">
-      <input id="block" type="checkbox">Use blockquotes</input>
-    </span>
-    <span class="chk">
-      <input id="act" type="checkbox">Use activity headers</input>
-    </span>
-    <br/>
-  </div>
-
-  <div>
-    <button id="genhtml" onclick="generate()" disabled>Generate HTML</button>
-  </div>
-
-  <textarea readonly id="output">Pick a file to begin.</textarea>
+  <!-- End of Site Introduction -->
 
   <hr/>
 
+  <!-- Input Elements -->
   <div>
+    <form id="form">
+      <input id="filepick" type="file" accept=".csv" onchange="TokoHPApp.loadFile(this)"/>
+      <label for="filepick">Choose a File</label>
+    </form>
+
+    <div>
+      <select id="names"></select>
+    </div>
+
+    <div>
+      <span class="chk">
+        <input id="submis" type="checkbox">Born submissive</input>
+      </span>
+      <span class="chk">
+        <input id="block" type="checkbox">Use blockquotes</input>
+      </span>
+      <span class="chk">
+        <input id="subcat" type="checkbox">Use subcategory headers</input>
+      </span>
+    </div>
+
+    <div>
+      <button id="genhtml" onclick="TokoHPApp.generate()" disabled>Generate HTML</button>
+    </div>
+
+  </div>
+  <!-- End of Input Elements -->
+
+  <!-- Output -->
+  <div>
+    <textarea readonly id="output">Pick a file to begin.</textarea>
+  </div>
+
+  <hr/>
+
+  <!-- User Instructions -->
+  <div>
+
+    <!-- Accordion Begins -->
     <button class="accordion">How do I use this?</button>
     <div class="panel" style="display:none;">
       <p>
@@ -74,6 +79,8 @@ output - the text area that will contain the generated html.
         and you're good to go.
       </p>
       <hr/>
+
+      <!-- Instructions: Spreadsheet Creation -->
       <button class="accordion">Creating the Spreadsheet</button>
       <div class="panel" style="display:none;">
         <p>
@@ -83,7 +90,8 @@ output - the text area that will contain the generated html.
         </p>
         <img src="images/csvtemplate.png"/>
         <p>
-          To fill out the sheet, you use a new row for each deviation. For each row, you:
+          To fill out the sheet, you use a new row for each deviation. For each
+          row, you:
         </p>
         <ol>
           <li>
@@ -91,13 +99,13 @@ output - the text area that will contain the generated html.
             you wish to include.
           </li>
           <li>
-            The the Breakdown column, fill out the full HP breakdown for the piece.
+            The Breakdown column, fill out the full HP breakdown for the piece.
             <br/>
-            <span class="footer">
-              Note: If different tokotas in the same piece have different HP counts,
-              you may enter the same deviation multiple times into the sheet (just add
-              a new row with the same thumb code). Only put the individual tokotas in
-              the row for the count that applies to them.
+            <span class="smalltext">
+              Note: If different tokotas in the same piece have different HP
+              counts, you may enter the same deviation multiple times into the
+              sheet (just add a new row with the same thumb code). Only put the
+              individual tokotas in the row for the count that applies to them.
             </span>
           </li>
           <li>Enter the Total HP for the piece</li>
@@ -108,10 +116,10 @@ output - the text area that will contain the generated html.
             Misc, or Fullbody, Headshot, etc)
           </li>
           <li>
-            Enter the Tokota's names in the Toko columns, filling in from the left.
-            Leave any extras spaces blank.
+            Enter the Tokota's names in the Toko columns, filling in from the
+            left. Leave any extras spaces blank.
             <br/>
-            <span class="footer">
+            <span class="smalltext">
               Note: You can use any format for the tokota's names (you
               could even use their IDs) that you want. Just make sure to use
               the same name consistently for a single tokota - do not for
@@ -124,32 +132,54 @@ output - the text area that will contain the generated html.
           Do not use commas or special characters anywhere in the sheet.
         </p>
         <p>
-          Now, just save your spreadsheet as a .csv file, and you're ready to go!
+          Now just save your spreadsheet as a .csv file, and you're ready to go!
         </p>
       </div>
+      <!-- End of Instructions: Spreadsheet Creation -->
 
       <hr/>
 
+      <!-- Instructions: Usage -->
       <button class="accordion">Using the Generator</button>
       <div class="panel" style="display:none;">
          <p>To run the generator, simply:</p>
         <ol>
           <li>Select your CSV file.</li>
-          <li>Select the name of the tokota you would like to generate a journal for.</li>
-          <li>If your tokota was born submissive, check the 'Born submissive' box. Otherwise, leave it unchecked.</li>
-          <li>If your journal skin has coded boxes that use the blockquote tag, check the 'Use blockquotes' box. Otherwise, leave it unchecked.</li>
-          <li>If you used sub-categories, check the 'Use activity headers' box. Otherwise, leave it unchecked.</li>
+          <li>
+            Select the name of the tokota you would like to generate a journal
+            for.
+          </li>
+          <li>
+            If your tokota was born submissive, check the 'Born submissive' box.
+            Otherwise, leave it unchecked.
+          </li>
+          <li>
+            If your journal skin has coded boxes that use the blockquote tag,
+            check the 'Use blockquotes' box. Otherwise, leave it unchecked.
+          </li>
+          <li>
+            If you used subcategories, check the 'Use subcategory headers' box.
+            Otherwise, leave it unchecked.
+          </li>
           <li>Press Generate HTML and copy the code.</li>
-          <li>Create or edit a deviantART or stash journal, go to Edit > Switch to HTML mode, and paste in your generated HTML.</li>
+          <li>
+            Create or edit a deviantART or stash journal, go to Edit > Switch to
+            HTML mode, and paste in your generated HTML.
+          </li>
         </ol>
       </div>
+      <!-- End of Instructions: Usage -->
+
     </div>
+    <!-- Accordion Ends -->
+
   </div>
+  <!-- End of User Instructions -->
 
   <hr/>
 
-  <div class="footer">
-    Latest Update: 6 Dec, 2017, 10:00 PM EST
+  <div class="smalltext">
+    Version 1.0.0 | Latest Update: 11 Dec, 2017, 1:30 PM EST
   </div>
 
 </body>

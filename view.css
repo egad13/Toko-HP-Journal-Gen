@@ -4,6 +4,10 @@
   margin-bottom: 0.5em;
 }
 
+*:focus {
+  outline: 2px dotted white;
+}
+
 body {
   background-color: #77C7D9;
   width: 80%;
@@ -92,7 +96,7 @@ hr {
   background-color: #C2E9F2;
 }
 
-.footer {
+.smalltext {
   font-size: 0.8em;
   font-style: italic;
   padding: auto;
