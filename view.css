@@ -77,7 +77,30 @@ hr {
   height: 1px;
   margin-top: 1em;
   margin-bottom: 1em;
-  background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+  background-image: linear-gradient(to right, rgba(54, 0, 54, 0),
+  rgba(54, 0, 54, 0.75), rgba(54, 0, 54, 0));
+}
+
+
+table {
+    border-collapse: collapse;
+    background-color: white;
+    font-size: 0.8em;
+}
+
+table, th, td {
+    border: 1px solid black;
+    padding: 0.3em;
+}
+
+.tablewrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tablegray {
+  text-align: center;
+  background-color: lightgray;
 }
 
 .chk {
@@ -94,6 +117,7 @@ hr {
   padding: 1em;
   margin-top: 0;
   background-color: #C2E9F2;
+  display: none;
 }
 
 .smalltext {

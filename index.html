@@ -71,24 +71,51 @@
 
     <!-- Accordion Begins -->
     <button class="accordion">How do I use this?</button>
-    <div class="panel" style="display:none;">
+    <div class="panel">
       <p>
         This generator lets you log HP for ALL your Tokotas in a single
         spreadsheet, and then generate an HP journal with one click! You just
         have to make sure you have your spreadsheet formatted like the template,
         and you're good to go.
       </p>
+
       <hr/>
 
       <!-- Instructions: Spreadsheet Creation -->
       <button class="accordion">Creating the Spreadsheet</button>
-      <div class="panel" style="display:none;">
+      <div class="panel">
         <p>
           Your spreadsheet should look like this. Always have the first row be
           headers, and make sure there are no empty rows in the middle of the
           file.
         </p>
-        <img src="images/csvtemplate.png"/>
+        <!-- Example Table -->
+        <div class="tablewrap">
+        <table>
+          <tr class="tablegray">
+            <td></td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td>
+            <td>F</td><td>G</td><td>H</td><td>I</td><td>J</td>
+          </tr>
+          <tr>
+            <td class="tablegray">1</td>
+            <th>Thumb Code</th>
+            <th>Breakdown</th>
+            <th>HP Total</th>
+            <th>SubCategory</th>
+            <th>Toko1</th><th>Toko2</th><th>Toko3</th>
+            <th>Toko4</th><th>Toko5</th><th>Toko6</th>
+          </tr>
+          <tr>
+            <td class="tablegray">2</td>
+            <td>:thumb000000000:</td>
+            <td>2 (fb colored) + 2 (bg)</td>
+            <td>4</td>
+            <td>Sample</td>
+            <td>Bob</td><td>Susan</td><td></td><td></td><td></td><td></td>
+          </tr>
+        </table>
+        </div>
+        <!-- End of: Example Table -->
         <p>
           To fill out the sheet, you use a new row for each deviation. For each
           row, you:
@@ -141,8 +168,8 @@
 
       <!-- Instructions: Usage -->
       <button class="accordion">Using the Generator</button>
-      <div class="panel" style="display:none;">
-         <p>To run the generator, simply:</p>
+      <div class="panel">
+         <p>To use the generator, simply:</p>
         <ol>
           <li>Select your CSV file.</li>
           <li>
@@ -179,7 +206,7 @@
   <hr/>
 
   <div class="smalltext">
-    Version 1.0.0 | Latest Update: 11 Dec, 2017, 1:30 PM EST
+    Version 1.0.1 | Latest Update: 15 Dec, 2017, 8:55 PM EST
   </div>
 
 </body>

@@ -419,9 +419,7 @@ var TokoHPApp = (function(){
     }
 
     //make necessary methods public
-    return {
-      getHtml: getHtml
-    };
+    return { getHtml: getHtml };
   }());
 
 
@@ -501,7 +499,7 @@ var TokoHPApp = (function(){
      * @param {string} path - The file path to check the extension of.
      * @param {string} ext - The extension the given file path should have.
      * @memberof TokoHPApp.FileUtils */
-    function hasValidExtension(path, ext){
+    function hasValidExt(path, ext){
       path = path.substring(path.lastIndexOf("."));
       return path === ext;
     }
@@ -520,10 +518,13 @@ var TokoHPApp = (function(){
      * be processed into Thumb and Toko objects.
      * @memberof TokoHPApp.FileUtils */
     function interpretInput(linesArr) {
-      var numberRegex = /[\-]?[\d]?[.]?[\d]+/; //const
-      var codeRegex = /[:]([t][h][u][m][b])?/g; //const
-      var validLnRegex = /[^,]/g; //const
-      var whitespaceRegex = /[\s]+/; //const
+      //regexs
+      var numberRegex = /[\-]?[\d]?[.]?[\d]+/; //string can be parsed to a number
+      var codeRegex = /[:]([thumb]+)?/g; //allows easy retrieval of necessary part of a thumbcode
+      var validLnRegex = /[^,\s]/g; //string contains something readable
+      var whitespaceRegex = /^[\s]+$/; // string is ONLY whitespace
+
+      //variables
       var line;
       var thumb;
       var namesFound = "";
@@ -534,18 +535,19 @@ var TokoHPApp = (function(){
 
       A: for (i = 1; i < linesArr.length; i += 1) {
         line = linesArr[i].split(",");
-        if (line.toString() === "" || line.toString().match(validLnRegex).length <= 1) {
+
+        if (line.toString().length === 0  || validLnRegex.test(line.toString()) === false) {
           break A;
         }
 
         //handle errors
-        if (line[2] === "" || line[2].match(numberRegex).length === -1) {
+        if (line[2].length === 0 || numberRegex.test(line[2]) === false) {
           DocUtils.errorOccurred("HP value at line " + (i+1)
           + " is either empty or contains non-numerical\ncharacters. "
           + "Please fix the issue and try again.");
           return null;
         }
-        if (line[0] === "") {
+        if (line[0].length === 0 || whitespaceRegex.test(line[0]) === true) {
           DocUtils.errorOccurred("Line " + (i+1) + " contains no thumb code. "
           + "Please fix the issue and try again.");
           return null;
@@ -557,18 +559,17 @@ var TokoHPApp = (function(){
 
         //if there's a new name on this line, create a Toko object for it
         for (j = 4; j < line.length; j += 1) {
-          if (line[j].length !== 0 && line[j].match(whitespaceRegex) === null
+          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false
           && namesFound.indexOf(line[j]) === -1) {
             tokos.push(new Toko(line[j]));
-            namesFound = namesFound + " | " + line[j];
+            namesFound = namesFound + "|||" + line[j];
           }
         }
 
-        //give the new thumbnail to all the tokos in it
-        for (j = 0; j < tokos.length; j += 1) {
-          for (k = 4; k < line.length; k += 1) {
-            if (line[k] === tokos[j].getName()) { tokos[j].addThumb(thumb); }
-          }
+        //give the new thumbnail to all the tokos associated with it
+        for (j = 4; j < line.length; j += 1){
+          var idx = TokoUtils.binarySearchByName(tokos, line[j]);
+          if (idx != -1) { tokos[idx].addThumb(thumb); }
         }
       }// end of for loop 'A'
 
@@ -578,7 +579,7 @@ var TokoHPApp = (function(){
     }
 
     //make necessary methods public
-    return { hasValidExtension: hasValidExtension, interpretInput: interpretInput };
+    return { hasValidExt: hasValidExt, interpretInput: interpretInput };
   }());
 
 
@@ -597,7 +598,7 @@ var TokoHPApp = (function(){
     var i;
     var newOption;
 
-    if (FileUtils.hasValidExtension(filepicker.value, ".csv") === false) {
+    if (FileUtils.hasValidExt(filepicker.value, ".csv") === false) {
       DocUtils.errorOccurred("Invalid file type. Please choose a Comma Separated Document (.csv)");
       return;
     }
