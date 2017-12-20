@@ -392,8 +392,6 @@ var TokoHPApp = (function(){
         result = result + "Carried over from previous section: " + tier.getOverflowFromPrevious() + " HP<br/>";
       }
 
-      console.log("subcat " + subcat);
-
       if(subcat === true){
         return (result + buildTier_withHeaders(block, tier));
       }
@@ -465,8 +463,7 @@ var TokoHPApp = (function(){
       return 0;
     }
 
-    /** Given an array of Toko objects sorted by name and a name, searches the
-     * array for the Toko with that name using a binary search algorithm.
+    /** Given an array of sorted Toko objects and a name, searches for the Toko with that name.
      * @returns {number} the array index of the specified Toko. If the Toko was not found, returns -1.
      * @param {TokoHPApp.Toko[]} arr - The array of Toko objects to search in.
      * @param {string} name - The name of the Toko to search for.
@@ -505,12 +502,11 @@ var TokoHPApp = (function(){
     }
 
     /** Given an array of strings with a specific format, creates Thumb and Toko objects to represent
-     * those strings. The Thumbs are stored inside their related Tokos, and the Tokos go into an array.
-     * If an error is encountered in the input, an error message is output to the document.<br/><br/>
+     * those strings. If an error is encountered in the input, an error message is output to the document.<br/><br/>
      * The format of a valid string for this method is:<br/><br/>
      * <i>:thumb000000000:,some description of hp breakdown,0,subcategory name,toko name,toko name,toko name...</i><br/><br/>
-     * That is, a valid string represents a Thumb and names its associated Tokos, and is comma-separated,
-     * with each section in order being thumbcode, HP breakdown, HP total, subcategory, and then any amount of Tokota names.
+     * That is, a valid string represents a Thumb, names its associated Tokos, and is comma-separated, with each
+     * section in order being: thumbcode, HP breakdown, HP total, subcategory, and then any amount of Tokota names.
      * <b>This method discards the first line of input, under the assumption that it is a row of headers.</b><br/>
      * @returns {?TokoHPApp.Toko[]} null if the input contained errors and could
      * not be fully read. Returns an array of Toko objects if the read was successful.
@@ -521,24 +517,22 @@ var TokoHPApp = (function(){
       //regexs
       var numberRegex = /[\-]?[\d]?[.]?[\d]+/; //string can be parsed to a number
       var codeRegex = /[:]([thumb]+)?/g; //allows easy retrieval of necessary part of a thumbcode
-      var validLnRegex = /[^,\s]/g; //string contains something readable
+      var invalidLnRegex = /^[,]+$/m //string does not contain anything readable
       var whitespaceRegex = /^[\s]+$/; // string is ONLY whitespace
 
       //variables
       var line;
       var thumb;
-      var namesFound = "";
-      var i;
-      var j;
-      var k;
+      var i, j, k;
+      var idx;
       var tokos = [];
 
       A: for (i = 1; i < linesArr.length; i += 1) {
-        line = linesArr[i].split(",");
-
-        if (line.toString().length === 0  || validLnRegex.test(line.toString()) === false) {
+        if (linesArr[i].length === 0  || invalidLnRegex.test(linesArr[i]) === true) {
           break A;
         }
+
+        line = linesArr[i].split(",");
 
         //handle errors
         if (line[2].length === 0 || numberRegex.test(line[2]) === false) {
@@ -559,21 +553,24 @@ var TokoHPApp = (function(){
 
         //if there's a new name on this line, create a Toko object for it
         for (j = 4; j < line.length; j += 1) {
-          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false
-          && namesFound.indexOf(line[j]) === -1) {
-            tokos.push(new Toko(line[j]));
-            namesFound = namesFound + "|||" + line[j];
+          line[j] = line[j].trim();
+          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
+            idx = TokoUtils.binarySearchByName(tokos, line[j]);
+            if (idx === -1){
+              tokos.push(new Toko(line[j]));
+              tokos.sort(TokoUtils.sortByName);
+            }
           }
         }
 
         //give the new thumbnail to all the tokos associated with it
         for (j = 4; j < line.length; j += 1){
-          var idx = TokoUtils.binarySearchByName(tokos, line[j]);
-          if (idx != -1) { tokos[idx].addThumb(thumb); }
+          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
+            idx = TokoUtils.binarySearchByName(tokos, line[j]);
+            if (idx !== -1) { tokos[idx].addThumb(thumb); }
+          }
         }
       }// end of for loop 'A'
-
-      tokos.sort(TokoUtils.sortByName);
 
       return tokos;
     }
@@ -610,7 +607,7 @@ var TokoHPApp = (function(){
     };
 
     reader.onload = function(e) {
-      fileContents = e.target.result.split("\n");
+        fileContents = e.target.result.split("\n");
     };
 
     reader.onloadend = function() {
