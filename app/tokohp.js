@@ -515,9 +515,8 @@ var TokoHPApp = (function(){
      * @memberof TokoHPApp.FileUtils */
     function interpretInput(linesArr) {
       //regexs
-      var numberRegex = /[\-]?[\d]?[.]?[\d]+/; //string can be parsed to a number
-      var codeRegex = /[:]([thumb]+)?/g; //allows easy retrieval of necessary part of a thumbcode
-      var invalidLnRegex = /^[,]+$/m //string does not contain anything readable
+      var numberRegex = /^[-]?[\d]*[.]?[\d]+$/; //string can be parsed to a number
+      var codeRegex = /:|thumb/g; //allows easy removal of unnecessary part of a thumbcode
       var whitespaceRegex = /^[\s]+$/; // string is ONLY whitespace
 
       //variables
@@ -528,47 +527,42 @@ var TokoHPApp = (function(){
       var tokos = [];
 
       A: for (i = 1; i < linesArr.length; i += 1) {
-        if (linesArr[i].length === 0  || invalidLnRegex.test(linesArr[i]) === true) {
-          break A;
-        }
+        if (linesArr[i].length !== 0) {
 
-        line = linesArr[i].split(",");
+          line = linesArr[i].split(",");
+	  	
+          //handle errors
+          if (line[2].length === 0 || numberRegex.test(line[2]) === false) {
+            DocUtils.errorOccurred("HP value at line " + (i+1)
+            + " is either empty or contains non-numerical\ncharacters. "
+            + "Please fix the issue and try again.");
+            return null;
+          }
 
-        //handle errors
-        if (line[2].length === 0 || numberRegex.test(line[2]) === false) {
-          DocUtils.errorOccurred("HP value at line " + (i+1)
-          + " is either empty or contains non-numerical\ncharacters. "
-          + "Please fix the issue and try again.");
-          return null;
-        }
-        if (line[0].length === 0 || whitespaceRegex.test(line[0]) === true) {
-          DocUtils.errorOccurred("Line " + (i+1) + " contains no thumb code. "
-          + "Please fix the issue and try again.");
-          return null;
-        }
+          //create the Thumb object for this line
+          thumb = new Thumb(line[0].replace(codeRegex, ""), line[1],
+          parseFloat(line[2]), line[3]);
 
-        //create the Thumb object for this line
-        thumb = new Thumb(line[0].replace(codeRegex, ""), line[1],
-        parseFloat(line[2]), line[3]);
-
-        //if there's a new name on this line, create a Toko object for it
-        for (j = 4; j < line.length; j += 1) {
-          line[j] = line[j].trim();
-          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
-            idx = TokoUtils.binarySearchByName(tokos, line[j]);
-            if (idx === -1){
-              tokos.push(new Toko(line[j]));
-              tokos.sort(TokoUtils.sortByName);
+          //if there's a new name on this line, create a Toko object for it
+          for (j = 4; j < line.length; j += 1) {
+            line[j] = line[j].trim();
+            if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
+              idx = TokoUtils.binarySearchByName(tokos, line[j]);
+              if (idx === -1){
+                tokos.push(new Toko(line[j]));
+                tokos.sort(TokoUtils.sortByName);
+              }
             }
           }
-        }
 
-        //give the new thumbnail to all the tokos associated with it
-        for (j = 4; j < line.length; j += 1){
-          if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
-            idx = TokoUtils.binarySearchByName(tokos, line[j]);
-            if (idx !== -1) { tokos[idx].addThumb(thumb); }
+          //give the new thumbnail to all the tokos associated with it
+          for (j = 4; j < line.length; j += 1){
+            if (line[j].length !== 0 && whitespaceRegex.test(line[j]) === false){
+              idx = TokoUtils.binarySearchByName(tokos, line[j]);
+              if (idx !== -1) { tokos[idx].addThumb(thumb); }
+            }
           }
+		
         }
       }// end of for loop 'A'
 
@@ -607,7 +601,8 @@ var TokoHPApp = (function(){
     };
 
     reader.onload = function(e) {
-        fileContents = e.target.result.split("\n");
+		//replace all quotation marks, as well as any in-cell linebreaks.
+        fileContents = e.target.result.replace(/[\n\r](?![,]?[\"]?:thumb|$)|\"/g, "").split("\n");
     };
 
     reader.onloadend = function() {
