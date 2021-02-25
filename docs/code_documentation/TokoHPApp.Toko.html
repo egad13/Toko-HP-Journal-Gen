@@ -50,7 +50,7 @@
 
 
 <div class="description">
-    Creates a new Toko, an object which represents a Tokota. For the purposes of this app, a Tokota is simply a nameand the information needed to generate an HP Journal.
+    A representation of an HP journal; a Tokota name and associated artwork,which can be constructed into tiers.
 </div>
 
 
@@ -143,7 +143,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line176">line 176</a>
+        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line190">line 190</a>
     </li></ul></dd>
     
 
@@ -153,6 +153,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -187,298 +189,6 @@
     
 
     
-        <h3 class="subsection-title">Members</h3>
-
-        
-            
-<h4 class="name" id="~AVG_MAX"><span class="type-signature">(private, inner, constant) </span>AVG_MAX<span class="type-signature"> :number</span></h4>
-
-
-
-
-<div class="description">
-    The maximum HP value the "Average to Dominant" Tier can hold.
-</div>
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line186">line 186</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="~DOM_MAX"><span class="type-signature">(private, inner, constant) </span>DOM_MAX<span class="type-signature"> :number</span></h4>
-
-
-
-
-<div class="description">
-    The maximum HP value the "Dominant to Alpha" Tier can hold.
-</div>
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line191">line 191</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="~EXTRA_MAX"><span class="type-signature">(private, inner, constant) </span>EXTRA_MAX<span class="type-signature"> :number</span></h4>
-
-
-
-
-<div class="description">
-    The maximum HP value the "Extra Slot" Tiers can hold.
-</div>
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line196">line 196</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="~SUB_MAX"><span class="type-signature">(private, inner, constant) </span>SUB_MAX<span class="type-signature"> :number</span></h4>
-
-
-
-
-<div class="description">
-    The maximum HP value the "Submissive to Average" Tier can hold.
-</div>
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line181">line 181</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -489,7 +199,7 @@
     
 
     
-    <h4 class="name" id="~addThumb"><span class="type-signature">(inner) </span>addThumb<span class="signature">(t)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="add_artwork"><span class="type-signature"></span>add_artwork<span class="signature">(a)</span><span class="type-signature"></span></h4>
     
 
     
@@ -497,7 +207,7 @@
 
 
 <div class="description">
-    Adds a Thumb to this Toko's list, and add's the Thumb's value to the grand HP total.
+    Adds a Artwork to this Toko's list, and add's the Artwork'svalue to the grand HP total.
 </div>
 
 
@@ -533,13 +243,13 @@
 
         <tr>
             
-                <td class="name"><code>t</code></td>
+                <td class="name"><code>a</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="TokoHPApp.Thumb.html">TokoHPApp.Thumb</a></span>
+<span class="param-type"><a href="TokoHPApp.Artwork.html">TokoHPApp.Artwork</a></span>
 
 
             
@@ -549,7 +259,7 @@
 
             
 
-            <td class="description last">The Thumb to be added to this Toko.</td>
+            <td class="description last">The Artwork to be added.</td>
         </tr>
 
     
@@ -590,7 +300,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line215">line 215</a>
+        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line262">line 262</a>
     </li></ul></dd>
     
 
@@ -618,13 +328,15 @@
 
 
 
+
+
         
             
 
     
 
     
-    <h4 class="name" id="~countTiers"><span class="type-signature">(inner) </span>countTiers<span class="signature">(sub)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="construct_tiers"><span class="type-signature"></span>construct_tiers<span class="signature">(sub)</span><span class="type-signature"></span></h4>
     
 
     
@@ -632,7 +344,7 @@
 
 
 <div class="description">
-    Removes any Tiers this Toko object may have had, and creates and counts for as many Tiers as neededfor this Toko's Hp Journal. This must be called before the HTML representation of this Toko can be generated.
+    Removes any Tiers this Toko may have had, and creates andcounts for as many Tiers as needed for this Toko's Hp Journal.This must be called before the HTML for this Toko is generated.
 </div>
 
 
@@ -684,12 +396,202 @@
 
             
 
-            <td class="description last">Whether or not this Toko should include a "Submissive to Average" Tier.</td>
+            <td class="description last">Whether or not this Toko should includea "Submissive to Average" Tier.</td>
         </tr>
 
     
     </tbody>
 </table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line275">line 275</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="grand_total"><span class="type-signature"></span>grand_total<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line248">line 248</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    the combined HP value of all Artworkscontained by this Toko.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="name"><span class="type-signature"></span>name<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
 
 
 
@@ -750,348 +652,6 @@
 
 
 
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~createTier"><span class="type-signature">(private, inner) </span>createTier<span class="signature">(tierName, tierMax)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    A helper function for TokoHPApp.Toko.countTiers. Creates a Tier withthe specified name and HP maximum, and adds Thumbs to it until it's full.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>tierName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name the new Tier will have.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>tierMax</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The maximum HP this Tier will be able to hold.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line226">line 226</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~getGrandTot"><span class="type-signature">(inner) </span>getGrandTot<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line208">line 208</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the combined HP value of all Thumbs contained by this Toko.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">number</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~getName"><span class="type-signature">(inner) </span>getName<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line205">line 205</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <h5>Returns:</h5>
 
         
@@ -1125,7 +685,7 @@
     
 
     
-    <h4 class="name" id="~getTiers"><span class="type-signature">(inner) </span>getTiers<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="TokoHPApp.Tier.html">TokoHPApp.Tier</a>>}</span></h4>
+    <h4 class="name" id="tiers"><span class="type-signature"></span>tiers<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="TokoHPApp.Tier.html">TokoHPApp.Tier</a>>}</span></h4>
     
 
     
@@ -1173,7 +733,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line211">line 211</a>
+        <a href="tokohp.js.html">tokohp.js</a>, <a href="tokohp.js.html#line254">line 254</a>
     </li></ul></dd>
     
 
@@ -1183,6 +743,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -1239,13 +801,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="TokoHPApp.Thumb.html">Thumb</a></li><li><a href="TokoHPApp.Tier.html">Tier</a></li><li><a href="TokoHPApp.Toko.html">Toko</a></li></ul><h3>Namespaces</h3><ul><li><a href="TokoHPApp.html">TokoHPApp</a></li><li><a href="TokoHPApp.DocUtils.html">DocUtils</a></li><li><a href="TokoHPApp.FileUtils.html">FileUtils</a></li><li><a href="TokoHPApp.HTMLGenn.html">HTMLGenn</a></li><li><a href="TokoHPApp.TokoUtils.html">TokoUtils</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="TokoHPApp.html">TokoHPApp</a></li><li><a href="TokoHPApp.HTMLGenn.html">HTMLGenn</a></li><li><a href="TokoHPApp.InOutUtils.html">InOutUtils</a></li><li><a href="TokoHPApp.TokoUtils.html">TokoUtils</a></li></ul><h3>Classes</h3><ul><li><a href="TokoHPApp.Artwork.html">Artwork</a></li><li><a href="TokoHPApp.Tier.html">Tier</a></li><li><a href="TokoHPApp.Toko.html">Toko</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Dec 11 2017 12:32:20 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Feb 24 2021 19:11:09 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

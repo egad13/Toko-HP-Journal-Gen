@@ -27,656 +27,595 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @file Contains the Toko-HP-Journal-Gen app.&lt;br/>&lt;br/> For detailed context on what the code in this app means
- * and does, see PROJECT_SPECIFICATIONS.md.&lt;br/>&lt;br/> In order to run, this app needs specific elements with
- * specific id's to be present in the webpage running it. These elements are:
- * &lt;ul>
- * &lt;li>A select element with id "names", which should be empty.&lt;/li>
- * &lt;li>Three checkbox inputs with the id's "submis", "block", and "subcat".&lt;/li>
- * &lt;li>A disabled button with id "genhtml", which will be enabled and disabled by the app as necessary.&lt;/li>
- * &lt;li>A readonly textarea with id "output".&lt;/li>
- * &lt;li>A file input element, within a form element that has id "form".&lt;/li>
- * &lt;/ul>
+ * @file Contains the Toko-HP-Journal-Gen app.&lt;br/>&lt;br/> For detailed context
+ * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author EricaG13
- * @version 1.0.0
+ * @version 1.0.4
  */
 
-/** A namespace which encapsulates all the code that is necessary for this app to work. It exists to keep private
- * the app's inner workings and keep the global namespace clean.
+/** A namespace which encapsulates all the code that is necessary for this app
+ * to work, mostly to keep the global namespace clean.
  * @namespace
  * @global */
 var TokoHPApp = (function(){
-  "use strict";
-
-  /** This array contains the list of Toko objects that will be used throughout the app.
-   * @static
-   * @private
-   * @type {TokoHPApp.Toko[]}
-   * @memberof TokoHPApp */
-  var appwide_tokos = [];
-
-
-  ///////////////////////////////////////////////////////////
-  /////////////////// DATA STORAGE OBJECTS //////////////////
-  ///////////////////////////////////////////////////////////
-
-  /** Creates a new Thumb. A Thumb represents a thumbnail, aka a piece of artwork.
-   * Thumbs are the smallest unit of an HP Journal, and are immutable.
-   * @class
-   * @param {string} id - The thumbcode of this Thumb. In the generated HTML, this
-   * is used to display the image.
-   * @param {string} hpBreakdown - A description of why this Thumb has the HP value it does.
-   * @param {number} hp - The HP value of this Thumb.
-   * @param {string} subcat - The subcategory of this Thumb. Empty if the user
-   * didn't indicate a value for this in their input.
-   * @memberof TokoHPApp */
-  function Thumb(id, hpBreakdown, hp, subcat) {
-    /** @returns {string} the id, or thumbcode, of this Thumb. */
-    function getCode() { return id; }
-
-    /** @returns {string} the HP breakdown of this Thumb. */
-    function getHpBreakdown() { return hpBreakdown; }
-
-    /** @returns {number} the HP value of this Thumb. */
-    function getHp() { return hp; }
-
-    /** @returns {string} the HP value of this Thumb. */
-    function getSubcategory() { return subcat; }
-
-    //make necessary methods public
-    return {
-      getCode: getCode,
-      getHpBreakdown: getHpBreakdown,
-      getHp: getHp,
-      getSubcategory: getSubcategory
-    };
-  }
-
-  /** Creates a new Tier. A Tier is a higher level structure within an HP journal, which contains a name,
-   * a list of Thumbs, and a maximum total HP which the Thumbs it contains can add up to. The HP total can
-   * be modified by Tiers that come before it in a single Toko's Journal; ie, if the Tier directly previous
-   * overflowed (went over its HP maximum), this Tier should be passed that overflow before any Thumbs are
-   * added to it, as that will affect how many Thumbs this Tier can legally hold.
-   * @class
-   * @param {string} name - The name to display for this Tier in an HP Journal.
-   * @param {number} hpMax - The maximum amount of HP the Thumbs in this tier can
-   * collectively have.
-   * @memberof TokoHPApp */
-  function Tier(name, hpMax) {
-    var total = 0;
-    var thumbArr = [];
-    var overflowFromPrev = 0;
-    var overflow = 0;
-
-    /** @returns {string} the name of this Tier. */
-    function getName() { return name; }
-
-    /** @returns {number} the HP value of this Tier. */
-    function getTotal() { return total; }
-
-    /** @returns {string} the Maximum HP value of this Tier. */
-    function getMax() { return hpMax; }
-
-    /** @returns {TokoHPApp.Thumb[]} The list of Thumbs contained by this Tier. */
-    function getThumbs() { return thumbArr; }
-
-    /** @returns {boolean} whether or not this Tier contains overflow from the previous Tier.*/
-    function hasOverflowFromPrevious() { return (overflowFromPrev > 0); }
-
-    /** If the Tier directly previous overflowed, this will return the the value of that overflow. Note that
-     * this value is automatically added to the total when this variable is set.
-     * @returns {number} The amount of HP which overflowed from the previous Tier. */
-    function getOverflowFromPrevious() { return overflowFromPrev; }
-
-    /** @returns {boolean} whether or not this Tier overflowed (went above maximum HP) */
-    function isOverflowing() { return (overflow > 0); }
-
-    /** If this Tier overflows, this will return the value of that overflow. This value is automatically subtracted from the
-     * total when this variable is set, and that this variable being >0 prevents any more Thumbs from being added to this Tier.
-     * @returns {number} the amount by which this Tier has overflowed. */
-    function getOverflow() { return overflow; }
-
-    /** Checks if this Tier has overflowed, and if it has, sets the overflow value.
-     * @private */
-    function checkIfOverflowing(){
-      if (overflow === 0 &amp;&amp; total >= hpMax){ overflow = total - hpMax; }
-    }
-
-    /** Provided this Tier isn't overflowing, adds a Thumb to this Tier's list,
-     * and adds that Thumb's HP value to this Tier's total.
-     * @param {TokoHPApp.Thumb} thumb - The Thumb to add to this Tier.
-     * @returns {boolean} whether or not the Thumb was successfully added. */
-    function countThumb(thumb){
-      if (overflow === 0){
-        thumbArr.push(thumb);
-        total += thumb.getHp();
-        checkIfOverflowing();
-        return true;
-      }
-      return false;
-    }
-
-    /** Used to tell this Tier that the previous Tier overflowed. Will only succeed once. If it needs to be called,
-     * it should be called BEFORE any Thumbs are added to the Tier.
-     * @param {number} n - The amount of overflow the previous Tier had. */
-    function setOverflowFromPrev(n){
-      if (overflowFromPrev === 0){
-        overflowFromPrev = n;
-        total += n;
-        checkIfOverflowing();
-      }
-    }
-
-    /** Sorts this Tier's list of Thumbs alphabetically by their subcategories. */
-    function sortBySubcat(){
-      thumbArr.sort(function(a, b) {
-        var subcatA = a.getSubcategory().toUpperCase();
-        var subcatB = b.getSubcategory().toUpperCase();
-        if(subcatA &lt; subcatB){ return -1; }
-        if(subcatA > subcatB){ return 1; }
-        return 0;
-      });
-    }
-
-    //make necessary methods public
-    return {
-      getName: getName,
-      getTotal: getTotal,
-      getMax: getMax,
-      getThumbs: getThumbs,
-      hasOverflowFromPrevious: hasOverflowFromPrevious,
-      getOverflowFromPrevious: getOverflowFromPrevious,
-      isOverflowing: isOverflowing,
-      getOverflow: getOverflow,
-      countThumb: countThumb,
-      setOverflowFromPrev: setOverflowFromPrev,
-      sortBySubcat: sortBySubcat
-    };
-
-  }
-
-
-  /** Creates a new Toko, an object which represents a Tokota. For the purposes of this app, a Tokota is simply a name
-   * and the information needed to generate an HP Journal.
-   * @class
-   * @param {string} name - The name of the Tokota represented by this object.
-   * @memberof TokoHPApp */
-  function Toko(name) {
-
-    /** The maximum HP value the "Submissive to Average" Tier can hold.
-     * @const {number}
-     * @private */
-    var SUB_MAX = 75;
-
-    /** The maximum HP value the "Average to Dominant" Tier can hold.
-     * @const {number}
-     * @private */
-    var AVG_MAX = 250;
-
-    /** The maximum HP value the "Dominant to Alpha" Tier can hold.
-     * @const {number}
-     * @private */
-    var DOM_MAX = 300;
-
-    /** The maximum HP value the "Extra Slot" Tiers can hold.
-     * @const {number}
-     * @private */
-    var EXTRA_MAX = 100;
-
-    var grandTotal = 0;
-    var thumbs = [];
-    var tiers = [];
-    var lastUsedIndex;
-    var i;
-
-    /** @returns {string} the name of this Toko. */
-    function getName() { return name; }
-
-    /** @returns {number} the combined HP value of all Thumbs contained by this Toko. */
-    function getGrandTot() { return grandTotal; }
-
-    /** @returns {TokoHPApp.Tier[]} this Toko's list of Tiers. */
-    function getTiers() { return tiers; }
-
-    /** Adds a Thumb to this Toko's list, and add's the Thumb's value to the grand HP total.
-     * @param {TokoHPApp.Thumb} t - The Thumb to be added to this Toko. */
-    function addThumb(t) {
-      thumbs.push(t);
-      grandTotal += t.getHp();
-    }
-
-
-    /** A helper function for TokoHPApp.Toko.countTiers. Creates a Tier with
-     * the specified name and HP maximum, and adds Thumbs to it until it's full.
-     * @param {string} tierName - The name the new Tier will have.
-     * @param {number} tierMax - The maximum HP this Tier will be able to hold.
-     * @private */
-    function createTier(tierName, tierMax) {
-      var newTier = new Tier(tierName, tierMax);
-      if (tiers.length > 0) {
-        newTier.setOverflowFromPrev(tiers[tiers.length - 1].getOverflow());
-      }
-      while (lastUsedIndex &lt; thumbs.length &amp;&amp; newTier.isOverflowing() === false) {
-        newTier.countThumb(thumbs[lastUsedIndex]);
-        lastUsedIndex += 1;
-      }
-      tiers.push(newTier);
-    }
-
-    /** Removes any Tiers this Toko object may have had, and creates and counts for as many Tiers as needed
-     * for this Toko's Hp Journal. This must be called before the HTML representation of this Toko can be generated.
-     * @param {boolean} sub - Whether or not this Toko should include a "Submissive to Average" Tier. */
-    function countTiers(sub) {
-      tiers = [];
-      lastUsedIndex = 0;
-      i = 0;
-
-      if (sub === true) {
-        createTier("Submissive to Average", SUB_MAX);
-      }
-      if (lastUsedIndex &lt; thumbs.length) {
-        createTier("Average to Dominant", AVG_MAX);
-      }
-      if (lastUsedIndex &lt; thumbs.length) {
-        createTier("Dominant to Alpha", DOM_MAX);
-      }
-      for (i = 0; lastUsedIndex &lt; thumbs.length; i += 1) {
-        createTier("Extra Slots " + (i+1), EXTRA_MAX);
-      }
-
-      for (i = 0; i &lt; tiers.length; i += 1) {
-        tiers[i].sortBySubcat();
-      }
-    }
-
-    //make necessary methods public
-    return {
-      getName: getName,
-      getGrandTot: getGrandTot,
-      getTiers: getTiers,
-      addThumb: addThumb,
-      countTiers: countTiers
-    };
-  }
-  /////////// END OF TOKO
-
-
-  /////////////////////////////////////////////////
-  /////////////// SINGLETON CLASSES ///////////////
-  /////////////////////////////////////////////////
-
-  /** A singleton class which is used to generate an HTML representation of a Toko object, ie an HP Journal.
-  * @namespace
-  * @memberof TokoHPApp */
-  var HTMLGenn = (function () {
-
-    /** The HTML template for the Grand Total section of an HP Journal.
-     * @const {string}
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    var template_grandTotal = "&lt;div align =\"center\">&lt;h3>Grand Total = "
-    + "$grandTotal HP&lt;/h3>&lt;/div>&lt;br/>&lt;br/>";
-
-    /** The HTML template for a tier header.
-     * @const {string}
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    var template_tierHeader = "&lt;h2>$tierName (Total = $tierTotal HP)&lt;/h2>&lt;br/>";
-
-    /** The HTML template for a subcategory header.
-     * @const {string}
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    var template_subcategoryHeader = "&lt;h3>$subcategoryName | Total = "
-    + "$subcategoryTotal HP&lt;/h3>";
-
-    /** The HTML template for a Thumb enclosed in blockquote tags.
-     * @const {string}
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    var template_thumbBlockquote = "&lt;blockquote>&lt;da:thumb id=\"$thumbCode\">&lt;b>"
-    + "&lt;br/>Total = $thumbHp HP&lt;/b>&lt;br/>$thumbBreakdown&lt;/blockquote>";
-
-    /** The HTML template for a Thumb centered in the journal.
-     * @const {string}
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    var template_thumb = "&lt;div align=\"center\">&lt;da:thumb id=\"$thumbCode\">&lt;b>"
-    + "&lt;br/>Total = $thumbHp HP&lt;/b>&lt;br/>$thumbBreakdown&lt;/div>&lt;br/>&lt;br/>";
-
-
-    /** @returns {string} an HTML string representing a single Thumb.
-     * @param {boolean} block - Whether or not the Thumb should be formatted with
-     * blockquote tags. If false, Thumb is centered instead.
-     * @param {TokoHPApp.Thumb} thumb - The Thumb to generate HTML for.
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    function buildThumbStr(block, thumb) {
-      if (block === true) {
-        return template_thumbBlockquote.replace("$thumbCode", thumb.getCode())
-        .replace("$thumbBreakdown", thumb.getHpBreakdown())
-        .replace("$thumbHp", thumb.getHp());
-      }
-      return template_thumb.replace("$thumbCode", thumb.getCode())
-      .replace("$thumbBreakdown", thumb.getHpBreakdown())
-      .replace("$thumbHp", thumb.getHp());
-    }
-
-    /** A helper method for TokoHPApp.HTMLGenn.buildTierStr.
-      * @returns {string} an HTML string representing a Tier's list of Thumbs, without using subcategory headers.
-      * @param {boolean} block - Whether or not the Thumbs should be formatted with
-      * blockquote tags. If false, Thumbs are centered instead.
-      * @param {TokoHPApp.Tier} tier - The Tier to generate HTML for.
-      * @private
-      * @memberof TokoHPApp.HTMLGenn */
-    function buildTier_noHeaders(block, tier) {
-      var i;
-      for (i = 0; i &lt; tier.getThumbs().length; i += 1) {
-        result = result + buildThumbStr(block, tier.getThumbs()[i]);
-      }
-      return result;
-    }
-
-    /** A helper method for TokoHPApp.HTMLGenn.buildTierStr.
-     * @returns {string} an HTML string representing a Tier's list of Thumbs, with subcategory headers included.
-     * @param {boolean} block - Whether or not the Thumbs should be formatted with
-     * blockquote tags. If false, Thumbs are centered instead.
-     * @param {TokoHPApp.Tier} tier - The Tier to generate HTML for.
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    function buildTier_withHeaders(block, tier) {
-      var i;
-      var currentSubcat = tier.getThumbs()[0].getSubcategory();
-      var subtotal = 0;
-      var result = result + template_subcategoryHeader.replace("$subcategoryName", tier.getThumbs()[0].getSubcategory());
-
-      for (i = 0; i &lt; tier.getThumbs().length; i += 1) {
-        if (currentSubcat !== tier.getThumbs()[i].getSubcategory()) {
-          result = result.replace("$subcategoryTotal", subtotal);
-          subtotal = 0;
-          result = result + template_subcategoryHeader.replace("$subcategoryName", tier.getThumbs()[i].getSubcategory());
-          currentSubcat = tier.getThumbs()[i].getSubcategory();
-        }
-        subtotal += tier.getThumbs()[i].getHp();
-        result = result + buildThumbStr(block, tier.getThumbs()[i]);
-      }
-      result = result.replace("$subcategoryTotal", subtotal); //ensures subtotal appears if there was only one subcategory in the tier
-
-      return result;
-    }
-
-    /** @returns {string} an HTML string representing a Tier object.
-     * @param {boolean} block - Whether or not the Thumbs should be formatted with
-     * blockquote tags. If false, Thumbs are centered instead.
-     * @param {boolean} subcat - Whether or not the Tier should include subcategory headers.
-     * @param {TokoHPApp.Tier} tier - The Tier to generate HTML for.
-     * @private
-     * @memberof TokoHPApp.HTMLGenn */
-    function buildTierStr(block, subcat, tier) {
-      var result = template_tierHeader.replace("$tierName", tier.getName())
-              .replace("$tierTotal", tier.getTotal());
-      if (tier.hasOverflowFromPrevious()){
-        result = result + "Carried over from previous section: " + tier.getOverflowFromPrevious() + " HP&lt;br/>";
-      }
-
-      if(subcat){ return (result + buildTier_withHeaders(block, tier)); }
-      return (result + buildTier_noHeaders(block, tier));
-    }
-
-    /** @returns {string} an HTML string representing a full Toko object; ie, an entire HP Journal.
-     * @param {TokoHPApp.Toko} toko - The Toko to generate HTML for.
-     * @param {boolean} block - Whether or not this Toko's Thumbs should be
-     * formatted with blockquote tags. If false, Thumbs are centered instead.
-     * @param {boolean} subcat - Whether or not the Toko's Tiers should include subcategory headers.
-     * @memberof TokoHPApp.HTMLGenn */
-    function getHtml(toko, block, subcat) {
-      var finalResult = "";
-      finalResult = template_grandTotal.replace("$grandTotal", toko.getGrandTot());
-      var i;
-
-      for (i = 0; i &lt; toko.getTiers().length; i += 1) {
-        finalResult = finalResult + buildTierStr(block, subcat, toko.getTiers()[i]);
-      }
-
-      return finalResult;
-    }
-
-    //make necessary methods public
-    return {
-      getHtml: getHtml
-    };
-  }());
-
-
-  /** A singleton class containing methods for common interactions with the webpage running the app.
-   * @namespace
-   * @memberof TokoHPApp */
-  var DocUtils = (function(){
-
-    /** Sends text to the output area of the page.
-     * @param {string} str - What to output to the page.
-     * @memberof TokoHPApp.DocUtils */
-    function output(str){
-      document.getElementById("output").innerHTML = str;
-    }
-
-    /** To be used when the app encounters an error. Resets the input elements
-     * and puts an error message in the page's output area.
-     * @param {string} str - The error message to output to the page.
-     * @memberof TokoHPApp.DocUtils */
-    function errorOccurred(str) {
-      document.getElementById("form").reset();
-      document.getElementById("genhtml").disabled = true;
-      document.getElementById("names").innerHTML = "";
-      output(str);
-    }
-
-    //make necessary methods public
-    return { errorOccurred: errorOccurred, output: output };
-  }());
-
-  /** A singleton class containing methods which perform useful operations on arrays of Toko objects.
-   * @namespace
-   * @memberof TokoHPApp */
-  var TokoUtils = (function(){
-
-    /** A helper function for array sorting. Sorts Toko objects alphabetically by name.
-     * @memberof TokoHPApp.TokoUtils */
-    function sortByName(a, b){
-      var nameA = a.getName().toUpperCase();
-      var nameB = b.getName().toUpperCase();
-      if(nameA &lt; nameB) { return -1; }
-      if(nameA > nameB) { return 1; }
-      return 0;
-    }
-
-    /** Given an array of Toko objects sorted by name and a name, searches the
-     * array for the Toko with that name using a binary search algorithm.
-     * @returns {number} the array index of the specified Toko. If the Toko was not found, returns -1.
-     * @param {TokoHPApp.Toko[]} arr - The array of Toko objects to search in.
-     * @param {string} name - The name of the Toko to search for.
-     * @memberof TokoHPApp.TokoUtils */
-    function binarySearchByName(arr, name){
-      var min = 0;
-      var max = arr.length - 1;
-      var idx;
-
-      while (min &lt;= max) {
-        idx = Math.floor((max + min) / 2);
-        if (arr[idx].getName() === name) { return idx; }
-        else if (arr[idx].getName() &lt; name) { min = idx + 1; }
-        else { max = idx - 1; }
-      }
-      return -1;
-    }
-
-    //make necessary methods public
-    return { sortByName: sortByName, binarySearchByName: binarySearchByName };
-  }());
-
-
-  /** A singleton class containing methods which assist in operations on input files.
-  * @namespace
-  * @memberof TokoHPApp */
-  var FileUtils = (function() {
-
-    /** @returns {boolean} whether or not the extension of the given file name matches the extension specified.
-     * @param {string} path - The file path to check the extension of.
-     * @param {string} ext - The extension the given file path should have.
-     * @memberof TokoHPApp.FileUtils */
-    function hasValidExtension(path, ext){
-      path = path.substring(path.lastIndexOf("."));
-      return path === ext;
-    }
-
-    /** Given an array of strings with a specific format, creates Thumb and Toko objects to represent
-     * those strings. The Thumbs are stored inside their related Tokos, and the Tokos go into an array.
-     * If an error is encountered in the input, an error message is output to the document.&lt;br/>&lt;br/>
-     * The format of a valid string for this method is:&lt;br/>&lt;br/>
-     * &lt;i>:thumb000000000:,some description of hp breakdown,0,subcategory name,toko name,toko name,toko name...&lt;/i>&lt;br/>&lt;br/>
-     * That is, a valid string represents a Thumb and names its associated Tokos, and is comma-separated,
-     * with each section in order being thumbcode, HP breakdown, HP total, subcategory, and then any amount of Tokota names.
-     * &lt;b>This method discards the first line of input, under the assumption that it is a row of headers.&lt;/b>&lt;br/>
-     * @returns {?TokoHPApp.Toko[]} null if the input contained errors and could
-     * not be fully read. Returns an array of Toko objects if the read was successful.
-     * @param {string[]} linesArr - The array of strings containing the input to
-     * be processed into Thumb and Toko objects.
-     * @memberof TokoHPApp.FileUtils */
-    function interpretInput(linesArr) {
-      var numberRegex = /[\-]?[\d]?[.]?[\d]+/; //const
-      var codeRegex = /[:]([t][h][u][m][b])?/g; //const
-      var validLnRegex = /[^,]/g; //const
-      var whitespaceRegex = /[\s]+/; //const
-      var line;
-      var thumb;
-      var namesFound = "";
-      var i;
-      var j;
-      var k;
-      var tokos = [];
-
-      A: for (i = 1; i &lt; linesArr.length; i += 1) {
-        line = linesArr[i].split(",");
-        if (line.toString() === "" || line.toString().match(validLnRegex).length &lt;= 1) {
-          break A;
-        }
-
-        //handle errors
-        if (line[2] === "" || line[2].match(numberRegex).length === -1) {
-          DocUtils.errorOccurred("HP value at line " + (i+1)
-          + " is either empty or contains non-numerical\ncharacters. "
-          + "Please fix the issue and try again.");
-          return null;
-        }
-        if (line[0] === "") {
-          DocUtils.errorOccurred("Line " + (i+1) + " contains no thumb code. "
-          + "Please fix the issue and try again.");
-          return null;
-        }
-
-        //create the Thumb object for this line
-        thumb = new Thumb(line[0].replace(codeRegex, ""), line[1],
-        parseFloat(line[2]), line[3]);
-
-        //if there's a new name on this line, create a Toko object for it
-        for (j = 4; j &lt; line.length; j += 1) {
-          if (line[j].length !== 0 &amp;&amp; line[j].match(whitespaceRegex) === null
-          &amp;&amp; namesFound.indexOf(line[j]) === -1) {
-            tokos.push(new Toko(line[j]));
-            namesFound = namesFound + " | " + line[j];
-          }
-        }
-
-        //give the new thumbnail to all the tokos in it
-        for (j = 0; j &lt; tokos.length; j += 1) {
-          for (k = 4; k &lt; line.length; k += 1) {
-            if (line[k] === tokos[j].getName()) { tokos[j].addThumb(thumb); }
-          }
-        }
-      }// end of for loop 'A'
-
-      tokos.sort(TokoUtils.sortByName);
-
-      return tokos;
-    }
-
-    //make necessary methods public
-    return { hasValidExtension: hasValidExtension, interpretInput: interpretInput };
-  }());
-
-
-  ///////////////////////////////////////////////////////////
-  //////////////////// PUBLIC INTERFACE /////////////////////
-  ///////////////////////////////////////////////////////////
-
-  /** To be set as a file input element's onchange method. Determines if the
-   * chosen file is of a valid type, and if so, reads its data into memory.
-   * @memberof TokoHPApp
-   * @static */
-  function loadFile(filepicker) {
-    var reader;
-    var fileContents;
-    var dropdown = document.getElementById("names");
-    var i;
-    var newOption;
-
-    if (FileUtils.hasValidExtension(filepicker.value, ".csv") === false) {
-      DocUtils.errorOccurred("Invalid file type. Please choose a Comma Separated Document (.csv)");
-      return;
-    }
-
-    reader = new FileReader();
-    reader.onloadstart = function() {
-      DocUtils.output("Loading File...");
-      dropdown.innerHTML = "";
-    };
-
-    reader.onload = function(e) {
-      fileContents = e.target.result.split("\n");
-    };
-
-    reader.onloadend = function() {
-      appwide_tokos = FileUtils.interpretInput(fileContents);
-      if (appwide_tokos !== null) {
-        for (i = 0; i &lt; appwide_tokos.length; i += 1) {
-          newOption = document.createElement("OPTION");
-          newOption.text = appwide_tokos[i].getName();
-          dropdown.appendChild(newOption);
-        }
-        DocUtils.output("FILE LOADED");
-        document.getElementById("genhtml").disabled = false;
-      }
-    };
-
-    reader.readAsText(filepicker.files[0]);
-
-  }
-
-
-  /** To be set as the "gethtml" button element's onclick method. Generates and
-   * outputs an HTML string representation of the chosen Toko.
-   * @memberof TokoHPApp
-   * @static */
-  function generate() {
-
-    var toko;
-    var e = document.getElementById("names");
-    var name = e.options[e.selectedIndex].value;
-    var isSubmis = document.getElementById("submis").checked;
-    var useSubcats = document.getElementById("subcat").checked;
-    var useBlockQs = document.getElementById("block").checked;
-
-    toko = appwide_tokos[TokoUtils.binarySearchByName(appwide_tokos, name)];
-    toko.countTiers(isSubmis);
-    DocUtils.output(HTMLGenn.getHtml(toko, isSubmis, useBlockQs, useSubcats));
-  }
-
-
-  //make necessary methods public
-  return {
-    loadFile: loadFile,
-    generate: generate
-  };
+	"use strict";
+
+	/** This array contains the list of Toko objects that will be used
+	 * throughout the app.
+	 * @static
+	 * @private
+	 * @type {TokoHPApp.Toko[]}
+	 * @memberof TokoHPApp */
+	var appwide_tokos = [];
+
+
+	///////////////////////////////////////////////////////////
+	/////////////////// DATA STORAGE OBJECTS //////////////////
+	///////////////////////////////////////////////////////////
+
+	/** The smallest unit of an HP Journal. Immutable.
+	 * @class
+	 * @param {string} url - The url of this Artwork. In the generated HTML,
+	 * this is used to display the image.
+	 * @param {string} descrip - A description of why this Artwork has the HP
+	 * value it does.
+	 * @param {number} hp - The HP value of this Artwork.
+	 * @param {string} subcat - The subcategory of this Artwork. Empty if the
+	 * user didn't indicate a value for this in their input.
+	 * @memberof TokoHPApp */
+	function Artwork(url, descrip, hp, subcat) {
+		return {
+			/** @returns {string} The url of this Artwork. *
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Artwork */
+			url: function() { return url; },
+			
+			/** @returns {string} The HP breakdown of this Artwork.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Artwork */
+			description: function() { return descrip; },
+			
+			/** @returns {number} The HP value of this Artwork.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Artwork */
+			hp: function() { return hp; },
+			
+			/** @returns {string} The HP value of this Artwork.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Artwork */
+			subcategory: function() { return subcat; }
+		};
+	}
+
+	/** A specialized list of Artworks. Each Tier has a maximum HP which its
+	 * component Artworks can add up to - once this value is passed, no more
+	 * Artworks can be added to the Tier. The amount by which a Tier surpasses
+	 * its HP maximum is considered the Tier's overflow. A Tier should be
+	 * initialized with the overflow from the previous Tier.
+	 * @class
+	 * @param {string} name - The display name of this Tier.
+	 * @param {number} hp_max - The maximum HP value this Tier can hold.
+	 * @param {number} overflow_from_prev - Optional. The amount of HP which
+	 * overflowed from the previous Tier into this one.
+	 * @memberof TokoHPApp */
+	function Tier(name, hp_max, overflow_from_prev) {
+		var artwork = [];
+		var overflow_prev =
+			(overflow_from_prev === undefined ? 0 : overflow_from_prev);
+		var overflow = 0;
+		var hp_total = overflow_prev;
+		
+		// A dictionary to keep track of HP totals for each known subcat of art.
+		var hp_subtotal = {};
+		
+		return {
+			/** @returns {string} The Tier's name.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			name: function() { return name; },
+			
+			/** @returns {number} The Tier's HP total.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			hp_total: function() { return hp_total; },
+			
+			/** @returns {number} The HP subtotals for each subcategory of
+			 * Artwork in the Tier.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			hp_subtotal: function() { return hp_subtotal; },
+			
+			/** @returns {string} The Tier's maximum HP value.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			hp_max: function() { return hp_max; },
+			
+			/** @returns {TokoHPApp.Artwork[]} The list of Artworks included
+			 * in this Tier.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			artwork: function() { return artwork; },
+			
+			/** @returns {number} The amount by which this Tier has exceeded
+			 * its maximum HP.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			overflow: function() { return overflow; },
+			
+			/** The amount by which the previous Tier exceeded its maximum HP.
+			 * This is considered part of this Tier's total HP.
+			 * @returns {number} The amount by which the previous Tier exceeded
+			 * its maximum HP.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			overflow_from_prev: function() { return overflow_prev; },
+			
+			/** If this Tier isn't already full, adds an Artwork to this Tier.
+			 * @param {TokoHPApp.Artwork} thumb - The Artwork to try to add.
+			 * @returns {boolean} Whether or not the Artwork was added.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			add_artwork: function(art){
+				if (overflow === 0){
+					// add the art, update the hp total
+					artwork.push(art);
+					hp_total += art.hp();
+					
+					// update subtotal, if necessary
+					if (art.subcategory() !== "" &amp;&amp; art.subcategory() !== undefined){
+						if (hp_subtotal[art.subcategory()] === undefined){
+							hp_subtotal[art.subcategory()] = art.hp();
+						} else {
+							hp_subtotal[art.subcategory()] += art.hp();
+						}
+					}
+					
+					// detect if this tier is overflowing or not
+					if (hp_total >= hp_max){
+						overflow = hp_total - hp_max;
+					}
+					return true;
+				}
+				return false;
+			},
+			
+			/** Sorts this Tier's list of Artworks alphabetically by
+			 * subcategory.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Tier */
+			sort_by_subcat: function(){
+				artwork.sort(function(a, b) {
+					var subcatA = a.subcategory().toUpperCase();
+					var subcatB = b.subcategory().toUpperCase();
+					if(subcatA &lt; subcatB){ return -1; }
+					if(subcatA > subcatB){ return 1; }
+					return 0;
+				});
+			}
+		};
+
+	}
+
+
+	/** A representation of an HP journal; a Tokota name and associated artwork,
+	 * which can be constructed into tiers.
+	 * @class
+	 * @param {string} name - The name of the Tokota represented by this object.
+	 * @memberof TokoHPApp */
+	function Toko(name) {
+
+		/** The maximum HP value the "Submissive to Average" Tier can hold.
+		 * @const {number}
+		 * @private */
+		const SUB_MAX = 75;
+
+		/** The maximum HP value the "Average to Dominant" Tier can hold.
+		 * @const {number}
+		 * @private */
+		const AVG_MAX = 250;
+
+		/** The maximum HP value the "Dominant to Alpha" Tier can hold.
+		 * @const {number}
+		 * @private */
+		const DOM_MAX = 300;
+
+		/** The maximum HP value the "Extra Slot" Tiers can hold.
+		 * @const {number}
+		 * @private */
+		const EXTRA_MAX = 100;
+
+		var grand_total = 0;
+		var artwork = [];
+		var tiers = [];
+
+		/** Creates a Tier with the specified name and HP maximum, and adds
+		 * Artworks to it until it's full or we've run out of Artwork.
+		 * @param {string} name - The name the new Tier will have.
+		 * @param {number} max - The maximum HP this Tier will be able to hold.
+		 * @param {number} idx - The starting index in the artwork list.
+		 * @returns {number} The last visited idx in the artwork list.
+		 * @private */
+		function create_tier(name, max, idx) {
+			var new_tier = new Tier(name, max, 
+					(tiers.length === 0) ? 0 : tiers[tiers.length - 1].overflow());
+			while (idx &lt; artwork.length &amp;&amp; new_tier.overflow() === 0) {
+				new_tier.add_artwork(artwork[idx]);
+				idx += 1;
+			}
+			new_tier.sort_by_subcat();
+			tiers.push(new_tier);
+			return idx;
+		}
+
+		// PUBLIC METHODS
+		return {
+			/** @returns {string} the name of this Toko.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Toko */
+			name: function() { return name; },
+			
+			/** @returns {number} the combined HP value of all Artworks
+			 * contained by this Toko.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Toko */
+			grand_total: function() { return grand_total; },
+			
+			/** @returns {TokoHPApp.Tier[]} this Toko's list of Tiers.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Toko */
+			tiers: function() { return tiers; },
+			
+			/** Adds a Artwork to this Toko's list, and add's the Artwork's
+			 * value to the grand HP total.
+			 * @param {TokoHPApp.Artwork} a - The Artwork to be added.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Toko */
+			add_artwork: function (a) {
+				artwork.push(a);
+				grand_total += a.hp();
+			},
+			
+			/** Removes any Tiers this Toko may have had, and creates and
+			 * counts for as many Tiers as needed for this Toko's Hp Journal.
+			 * This must be called before the HTML for this Toko is generated.
+			 * @param {boolean} sub - Whether or not this Toko should include
+			 * a "Submissive to Average" Tier.
+			 * @instance
+			 * @method 
+			 * @memberOf TokoHPApp.Toko */
+			construct_tiers: function (sub) {
+				tiers = [];
+				var idx = 0;
+
+				if (sub === true) {
+					idx = create_tier("Submissive to Average", SUB_MAX, idx);
+				}
+				if (idx &lt; artwork.length) {
+					idx = create_tier("Average to Dominant", AVG_MAX, idx);
+				}
+				if (idx &lt; artwork.length) {
+					idx = create_tier("Dominant to Alpha", DOM_MAX, idx);
+				}
+				for (var i = 1; idx &lt; artwork.length; i += 1) {
+					idx = create_tier("Extra Slots "+i, EXTRA_MAX, idx);
+				}
+			}
+		};
+	}
+	/////////// END OF TOKO
+
+
+	/////////////////////////////////////////////////
+	/////////////// SINGLETON CLASSES ///////////////
+	/////////////////////////////////////////////////
+
+	/** A singleton used to generate HP journals from Toko objects.
+	 * @namespace
+	 * @memberof TokoHPApp */
+	var HTMLGenn = (function () {
+
+		/** @returns {string} an HTML string representing a single Artwork.
+		 * @param {boolean} block - If true, Artworks are formatted with
+		 * blockquotes. If false, Artworks are centered.
+		 * @param {TokoHPApp.Artwork} thumb - The Artwork to generate HTML for.
+		 * @private
+		 * @memberof TokoHPApp.HTMLGenn */
+		function build_artwork_str(block, art) {
+			var start = "&lt;div align=\"center\">";
+			var end = "&lt;/div>&lt;br/>&lt;br/>";
+			if (block === true){
+				start = "&lt;blockquote>";
+				end = "&lt;/blockquote>";
+			}
+			return `${start}&lt;da:thumb id=\"${art.url()}\">&lt;br/>&lt;b>Total = ${art.hp()} HP&lt;/b>&lt;br/>${art.description()}${end}`;
+		}
+
+		/** @returns {string} an HTML string representing a Tier object.
+		 * @param {boolean} block - If true, Artworks are formatted with
+		 * blockquotes. If false, Artworks are centered.
+		 * @param {boolean} subcat - Whether or not the Tier should include
+		 * subcategory headers.
+		 * @param {TokoHPApp.Tier} tier - The Tier to generate HTML for.
+		 * @private
+		 * @memberof TokoHPApp.HTMLGenn */
+		function build_tier_str(block, subcat, tier) {
+			// tier header
+			var result = `&lt;h2>${tier.name()} (Total = ${tier.hp_total()} HP)&lt;/h2>&lt;br/>`;
+			if (tier.overflow_from_prev() > 0){
+				result = `${result}Carried over from previous section: ${tier.overflow_from_prev()} HP&lt;br/>`;
+			}
+			// artwork
+			var cur_subcat = "";
+			for (var i = 0; i &lt; tier.artwork().length; i += 1){
+				// include subcategory headers, if that was requested.
+				if (subcat === true &amp;&amp; cur_subcat !== tier.artwork()[i].subcategory()){
+					cur_subcat = tier.artwork()[i].subcategory();
+					result = `${result}&lt;h3>${cur_subcat} | Total = ${tier.hp_subtotal()[cur_subcat]} HP&lt;/h3>`;
+				}
+				result = `${result}${build_artwork_str(block, tier.artwork()[i])}`;
+			}
+			return result;
+		}
+
+		
+		// PUBLIC METHODS
+		return {
+			/** @returns {string} HTML formatted HP journal for the given Toko.
+			 * @param {TokoHPApp.Toko} toko - The Toko to generate HTML for.
+			 * @param {boolean} block - If true, Artworks are formatted with
+			 * blockquotes. If false, Artworks are centered.
+			 * @param {boolean} subcat - If true, subtotals for Artwork
+			 * subcategories are included.
+			 * @memberof TokoHPApp.HTMLGenn */
+			get_html: function(toko, block, subcat) {
+				var result = `&lt;div align ="center">&lt;h3>Grand Total = ${toko.grand_total()} HP&lt;/h3>&lt;/div>&lt;br/>&lt;br/>`;
+				for (var i = 0; i &lt; toko.tiers().length; i += 1) {
+					result = `${result}${build_tier_str(block, subcat, toko.tiers()[i])}`;
+				}
+				return result;
+			}
+		};
+	}());
+
+	/** A singleton containing methods which perform useful operations on
+	 * arrays of Toko objects.
+	 * @namespace
+	 * @memberof TokoHPApp */
+	var TokoUtils = (function(){
+		// PUBLIC METHODS
+		return {
+			/** A helper function for array sorting. Sorts Toko objects
+			 * alphabetically by name.
+			 * @memberof TokoHPApp.TokoUtils */
+			sort_by_name: function(a, b){
+				var nameA = a.name().toUpperCase();
+				var nameB = b.name().toUpperCase();
+				if(nameA &lt; nameB) { return -1; }
+				if(nameA > nameB) { return 1; }
+				return 0;
+			},
+			
+			/** Given an array of sorted Tokos and a name, searches for
+			 * the Toko with that name.
+			 * @returns {number} the array index of the specified Toko. If the
+			 * Toko was not found, returns -1.
+			 * @param {TokoHPApp.Toko[]} arr - The array of Tokos to search.
+			 * @param {string} name - The name of the Toko to search for.
+			 * @memberof TokoHPApp.TokoUtils */
+			binary_search_by_name: function(arr, name){
+				var min = 0;
+				var max = arr.length - 1;
+				var idx;
+
+				while (min &lt;= max) {
+					idx = Math.floor((max + min) / 2);
+					if (arr[idx].name() === name) {
+						return idx;
+					} else if (arr[idx].name() &lt; name) {
+						min = idx + 1;
+					} else {
+						max = idx - 1;
+					}
+				}
+				return -1;
+			}
+		};
+	}());
+
+	/** A singleton containing methods which assist in operating on input and
+	 * outputting to the web page.
+	 * @namespace
+	 * @memberof TokoHPApp */
+	var InOutUtils = (function() {
+		// PUBLIC METHODS
+		return {
+			/** Sends text to the output area of the page.
+			 * @param {string} str - What to output to the page.
+			 * @memberof TokoHPApp.InOutUtils */
+			output: function(str){
+				document.getElementById("output").innerHTML = str;
+			},
+			
+			/** To be used when the app encounters an error. Resets the input elements
+			 * and puts an error message in the page's output area.
+			 * @param {string} str - The error message to output to the page.
+			 * @memberof TokoHPApp.InOutUtils */
+			error_out: function(str) {
+				document.getElementById("form").reset();
+				document.getElementById("genhtml").disabled = true;
+				document.getElementById("names").innerHTML = "";
+				appwide_tokos = [];
+				InOutUtils.output("I have terrible news. " + str);
+			},
+			
+			/** @returns {boolean} True if the extension of the given file path
+			 * matches the given target extension.
+			 * @param {string} path - The file path to check the extension of.
+			 * @param {string} ext - The correct extension.
+			 * @memberof TokoHPApp.InOutUtils */
+			has_valid_ext: function(path, ext){
+				path = path.substring(path.lastIndexOf("."));
+				return path === ext;
+			},
+			
+			/** Given an array of strings representing Artwork, constructs
+			 * Artwork and Toko object representations of the data. See
+			 * docs/PROJECT_SPECIFICATIONS.md for details of the expected
+			 * format. The first line of input is assumed to be headers and
+			 * is discarded.
+			 * @returns {?TokoHPApp.Toko[]} An array of completed Tokos, or
+			 * null if the input contained errors.
+			 * @param {string[]} lines_arr - An array of Artwork strings.
+			 * @memberof TokoHPApp.InOutUtils */
+			// TODO modify for the new URL data
+			interpret_input: function(lines_arr) {
+				//regexs
+				var number_regex = /^[\-]?[\d]*[.]?[\d]+$/; //string can be parsed to a number
+				var code_regex = /:|thumb/g; //allows easy removal of unnecessary part of a thumbcode
+				var whitespace_regex = /^[\s]+$/; // string is ONLY whitespace
+
+				//variables
+				var line;
+				var art;
+				var idx;
+				var tokos = [];
+
+				A: for (var i = 1; i &lt; lines_arr.length; i += 1) {
+					if (lines_arr[i].length !== 0) {
+
+						line = lines_arr[i].split(",");
+						
+						//handle errors
+						if (line[2].length === 0 || number_regex.test(line[2]) === false) {
+							InOutUtils.error_out("HP value at line " + (i+1)
+							+ " is either empty or contains non-numerical\ncharacters. "
+							+ "Please fix the issue and try again.");
+							return null;
+						}
+
+						//create the Artwork object for this line
+						art = new Artwork(line[0].replace(code_regex, ""), line[1],
+						parseFloat(line[2]), line[3]);
+
+						//if there's a new name on this line, create a Toko object for it
+						for (var j = 4; j &lt; line.length; j += 1) {
+							line[j] = line[j].trim();
+							if (line[j].length !== 0 &amp;&amp; whitespace_regex.test(line[j]) === false){
+								idx = TokoUtils.binary_search_by_name(tokos, line[j]);
+								if (idx === -1){
+									tokos.push(new Toko(line[j]));
+									tokos.sort(TokoUtils.sort_by_name);
+								}
+							}
+						}
+
+						//give the new thumbnail to all the tokos associated with it
+						for (var j = 4; j &lt; line.length; j += 1){
+							if (line[j].length !== 0 &amp;&amp; whitespace_regex.test(line[j]) === false){
+								idx = TokoUtils.binary_search_by_name(tokos, line[j]);
+								if (idx !== -1) { tokos[idx].add_artwork(art); }
+							}
+						}
+					
+					}
+				}// end of for loop 'A'
+
+				return tokos;
+			}
+		};
+	}());
+
+
+	///////////////////////////////////////////////////////////
+	//////////////////// PUBLIC INTERFACE /////////////////////
+	///////////////////////////////////////////////////////////
+
+	return {
+		/** To be set as a file input element's onchange method. Determines if the
+		 * chosen file is of a valid type, and if so, reads its data into memory.
+		 * @memberof TokoHPApp
+		 * @static */
+		load_file: function(filepicker) {
+			var reader;
+			var file_contents;
+			var dropdown = document.getElementById("names");
+			var new_option;
+
+			if (InOutUtils.has_valid_ext(filepicker.value, ".csv") === false) {
+				InOutUtils.error_out("Invalid file type. Please choose a Comma Separated Document (.csv)");
+				return;
+			}
+
+			reader = new FileReader();
+			reader.onerror = function(evt) {
+				console.log(evt);
+				InOutUtils.error_out(reader.error);
+				reader.abort();
+			};
+			reader.onloadstart = function() {
+				InOutUtils.output("Loading File...");
+				dropdown.innerHTML = "";
+			};
+			reader.onload = function(e) {
+				//remove quotation marks and in-cell line breaks.
+				file_contents = e.target.result.replace(/[\n\r](?![,]?["]?:thumb|$)|"/gm, "").split(/\r?\n/);
+			};
+			reader.onloadend = function() {
+				appwide_tokos = InOutUtils.interpret_input(file_contents);
+				if (appwide_tokos !== null) {
+					for (var i = 0; i &lt; appwide_tokos.length; i += 1) {
+						new_option = document.createElement("OPTION");
+						new_option.text = appwide_tokos[i].name();
+						dropdown.appendChild(new_option);
+					}
+					InOutUtils.output("FILE LOADED");
+					document.getElementById("genhtml").disabled = false;
+				}
+			};
+
+			reader.readAsText(filepicker.files[0]);
+		},
+		
+		/** To be set as the "gethtml" button element's onclick method. Generates and
+		 * outputs an HTML string representation of the chosen Toko.
+		 * @memberof TokoHPApp
+		 * @static */
+		generate: function() {
+			var toko;
+			var e = document.getElementById("names");
+			var name = e.options[e.selectedIndex].value;
+			var submis = document.getElementById("submis").checked;
+			var use_subcats = document.getElementById("subcat").checked;
+			var use_blocks = document.getElementById("block").checked;
+			
+			try {
+				InOutUtils.output("Generating HTML, please hold...");
+				toko = appwide_tokos[TokoUtils.binary_search_by_name(appwide_tokos, name)];
+				toko.construct_tiers(submis);
+				InOutUtils.output(HTMLGenn.get_html(toko, use_blocks, use_subcats));
+			} catch (err) {
+				console.error(err);
+				InOutUtils.error_out(err.message);
+			}
+		}
+	};
 
 }()); //end of TokoHPApp
 </code></pre>
@@ -689,13 +628,13 @@ var TokoHPApp = (function(){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="TokoHPApp.Thumb.html">Thumb</a></li><li><a href="TokoHPApp.Tier.html">Tier</a></li><li><a href="TokoHPApp.Toko.html">Toko</a></li></ul><h3>Namespaces</h3><ul><li><a href="TokoHPApp.html">TokoHPApp</a></li><li><a href="TokoHPApp.DocUtils.html">DocUtils</a></li><li><a href="TokoHPApp.FileUtils.html">FileUtils</a></li><li><a href="TokoHPApp.HTMLGenn.html">HTMLGenn</a></li><li><a href="TokoHPApp.TokoUtils.html">TokoUtils</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="TokoHPApp.html">TokoHPApp</a></li><li><a href="TokoHPApp.HTMLGenn.html">HTMLGenn</a></li><li><a href="TokoHPApp.InOutUtils.html">InOutUtils</a></li><li><a href="TokoHPApp.TokoUtils.html">TokoUtils</a></li></ul><h3>Classes</h3><ul><li><a href="TokoHPApp.Artwork.html">Artwork</a></li><li><a href="TokoHPApp.Tier.html">Tier</a></li><li><a href="TokoHPApp.Toko.html">Toko</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Dec 11 2017 12:32:20 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Feb 24 2021 19:11:09 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

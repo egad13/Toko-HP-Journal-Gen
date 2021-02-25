@@ -2,17 +2,17 @@
 <html>
 
 <head>
-  <title>Tokota HP Journal Generator</title>
-  <link rel="stylesheet" href="view.css">
+  <title>Tokotas HP Journal Generator</title>
+  <link rel="stylesheet" href="view.css?v=1">
   <script type="text/javascript" src="lib/accordian.js"></script>
-  <script type="text/javascript" src="app/tokohp.js"></script>
+  <script type="text/javascript" src="app/tokohp.js?v=1.0.4"></script>
 </head>
 
 
 <body>
 
   <!-- Site Introduction -->
-  <h1>Tokota HP Journal Generator</h1>
+  <h1>HP Journal Generator</h1>
   <main role="main">
   <p>
     This simple-to-use website will take your database of Tokotas, and allow you
@@ -22,7 +22,7 @@
   </p>
   <p>
     If you find any bugs, please open an issue on
-    <a href="https://github.com/EricaG13/Toko-HP-Journal-Gen/issues">
+    <a href="https://github.com/egad13/Toko-HP-Journal-Gen/issues">
       the project's GitHub page.
     </a>
   </p>
@@ -33,8 +33,8 @@
   <!-- Input Elements -->
   <div>
     <form id="form">
-      <input id="filepick" type="file" accept=".csv" onchange="TokoHPApp.loadFile(this)"/>
-      <label for="filepick">Choose a File</label>
+      <input id="filepick" type="file" accept=".csv" onchange="TokoHPApp.load_file(this)"/>
+      <label class="btn" for="filepick">Choose a File</label>
     </form>
 
     <div>
@@ -43,13 +43,13 @@
 
     <div>
       <span class="chk">
-        <input id="submis" type="checkbox">Born submissive</input>
+        <input id="submis" type="checkbox" /><label for="submis">Born submissive</label>
       </span>
       <span class="chk">
-        <input id="block" type="checkbox">Use blockquotes</input>
+        <input id="block" type="checkbox" /><label for="block">Use blockquotes</label>
       </span>
       <span class="chk">
-        <input id="subcat" type="checkbox">Use subcategory headers</input>
+        <input id="subcat" type="checkbox" /><label for="subcat">Use subcategory headers</label>
       </span>
     </div>
 
@@ -138,13 +138,13 @@
           </li>
           <li>Enter the Total HP for the piece</li>
           <li>
-            The Sub-Category column is optional. If you would like to have
-            your HP tracker broken into subsections by activity, art type, etc,
-            you can add your own subtitles in here. (ex. Exploring, Hunting,
-            Misc, or Fullbody, Headshot, etc)
+            If you'd like  your HP tracker broken into subsections by activity,
+			art type, etc, (ex. Exploring, Hunting, Misc, or Fullbody, Headshot)
+			you can add your own subtitles in the Sub-Category column. If you
+			don't want this, just leave this column blank.
           </li>
           <li>
-            Enter the Tokota's names in the Toko columns, filling in from the
+            Enter the Tokotas' names in the Toko columns, filling in from the
             left. Leave any extras spaces blank.
             <br/>
             <span class="smalltext">
@@ -208,7 +208,7 @@
   <hr/>
 
   <footer role="contentinfo" class="smalltext">
-    Version 1.0.3 | Latest Update: 14 June, 2018, 1:30 PM EST
+    Version 1.0.4 | Latest Update: 24 February, 2021, 7:30 PM EST
   </footer>
 
 </body>

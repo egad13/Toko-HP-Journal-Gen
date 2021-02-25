@@ -38,11 +38,11 @@ input[type=file] {
   display: inline;
 }
 
-label {
+.btn {
   display: inline-block;
 }
 
-button, label {
+button, .btn {
   cursor: pointer;
   font-size: 0.9em;
   border: 0;
@@ -52,15 +52,15 @@ button, label {
   background-color: #765499;
 }
 
-button:hover, label:hover {
+button:hover, .btn:hover {
   background-color: #8962B3;
 }
 
-button:active, label:active {
+button:active, .btn:active {
   background-color: #624680;
 }
 
-button:focus, label:focus {
+button:focus, .btn:focus {
   outline: 1px dotted white;
 }
 
