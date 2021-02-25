@@ -1,7 +1,7 @@
 /**
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
- * @author EricaG13
+ * @author Erica G (egad13)
  * @version 1.0.4
  */
 
