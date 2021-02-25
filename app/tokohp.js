@@ -5,6 +5,9 @@
  * @version 1.0.4
  */
 
+// TODO figure out how to more safely parse the CSV input. quoted strings,
+// line breaks inside of cells, etc, will break things.
+
 /** A namespace which encapsulates all the code that is necessary for this app
  * to work, mostly to keep the global namespace clean.
  * @namespace
@@ -302,21 +305,77 @@ var TokoHPApp = (function(){
 	 * @namespace
 	 * @memberof TokoHPApp */
 	var HTMLGenn = (function () {
+		
+		/** Given the URL for a piece of art on Deviantart, queries the
+		 * Deviantart oEmbed API for information about the piece.
+		 * @returns {Object} An object containing info about a piece of art on
+		 * Deviantart. Follows oEmbed response specifications.
+		 * @param {string} url - A valid Deviantart URL.
+		 * @private
+		 * @memberof TokoHPApp.HTMLGenn */
+		function get_devart_json(url){
+			//var cors = "https://cors-anywhere.herokuapp.com/";
+			var oembedUrl = //cors+
+				"https://backend.deviantart.com/oembed?type=json&url="
+				+encodeURIComponent(url);
+			var response;
+		
+			var req = new XMLHttpRequest();
+			req.open("GET", oembedUrl, false);
+			req.setRequestHeader('Content-Type', 'application/json');
+			req.onreadystatechange = function(){
+				if(req.readyState === 4){
+					response = JSON.parse(req.responseText);
+				}
+			};
+			req.send();
+			
+			return response;
+		}
+		
+		/** @returns {boolean} Whether or not the given url leads to a piece of
+		 * art on Deviantart.
+		 * @param {string} url - The URL to test.
+		 * @private
+		 * @memberof TokoHPApp.HTMLGenn */
+		function is_url_devart(url){
+			return /^http[s]?:\/\/[^\s"]*(deviantart|sta\.sh|fav\.me)[^\s"]+$/i
+				.test(url);
+		}
 
 		/** @returns {string} an HTML string representing a single Artwork.
 		 * @param {boolean} block - If true, Artworks are formatted with
 		 * blockquotes. If false, Artworks are centered.
-		 * @param {TokoHPApp.Artwork} thumb - The Artwork to generate HTML for.
+		 * @param {TokoHPApp.Artwork} art - The Artwork to generate HTML for.
 		 * @private
 		 * @memberof TokoHPApp.HTMLGenn */
 		function build_artwork_str(block, art) {
 			var start = "<div align=\"center\">";
 			var end = "</div><br/><br/>";
+			var content;
+			var json;
+			
+			// optional blockquote formatting
 			if (block === true){
 				start = "<blockquote>";
 				end = "</blockquote>";
 			}
-			return `${start}<da:thumb id=\"${art.url()}\"><br/><b>Total = ${art.hp()} HP</b><br/>${art.description()}${end}`;
+			
+			// deviantart embeds
+			if (is_url_devart(art.url()) === true){
+				json = get_devart_json(art.url());
+				if (json.type === "photo"){
+					content = `<img style="width:auto" src="${json.thumbnail_url}" />`;
+				} else if (json.type === "rich"){
+					content = `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,200)}...</p></div>`;
+				}
+			}
+			// bonuses with no visuals - just a simple link
+			else {
+				content = art.url();
+			}
+			
+			return `${start}<a href="${art.url()}">${content}</a><br/><b>Total = ${art.hp()} HP</b><br/>${art.description()}${end}`;
 		}
 
 		/** @returns {string} an HTML string representing a Tier object.
@@ -356,7 +415,7 @@ var TokoHPApp = (function(){
 			 * @param {boolean} subcat - If true, subtotals for Artwork
 			 * subcategories are included.
 			 * @memberof TokoHPApp.HTMLGenn */
-			get_html: function(toko, block, subcat) {
+			gen_journal: function(toko, block, subcat) {
 				var result = `<div align ="center"><h3>Grand Total = ${toko.grand_total()} HP</h3></div><br/><br/>`;
 				for (var i = 0; i < toko.tiers().length; i += 1) {
 					result = `${result}${build_tier_str(block, subcat, toko.tiers()[i])}`;
@@ -458,9 +517,9 @@ var TokoHPApp = (function(){
 			 * @memberof TokoHPApp.InOutUtils */
 			// TODO modify for the new URL data
 			interpret_input: function(lines_arr) {
+				
 				//regexs
 				var number_regex = /^[\-]?[\d]*[.]?[\d]+$/; //string can be parsed to a number
-				var code_regex = /:|thumb/g; //allows easy removal of unnecessary part of a thumbcode
 				var whitespace_regex = /^[\s]+$/; // string is ONLY whitespace
 
 				//variables
@@ -483,8 +542,7 @@ var TokoHPApp = (function(){
 						}
 
 						//create the Artwork object for this line
-						art = new Artwork(line[0].replace(code_regex, ""), line[1],
-						parseFloat(line[2]), line[3]);
+						art = new Artwork(line[0], line[1], parseFloat(line[2]), line[3]);
 
 						//if there's a new name on this line, create a Toko object for it
 						for (var j = 4; j < line.length; j += 1) {
@@ -546,8 +604,7 @@ var TokoHPApp = (function(){
 				dropdown.innerHTML = "";
 			};
 			reader.onload = function(e) {
-				//remove quotation marks and in-cell line breaks.
-				file_contents = e.target.result.replace(/[\n\r](?![,]?["]?:thumb|$)|"/gm, "").split(/\r?\n/);
+				file_contents = e.target.result.trim().split(/\r?\n/);
 			};
 			reader.onloadend = function() {
 				appwide_tokos = InOutUtils.interpret_input(file_contents);
@@ -581,7 +638,9 @@ var TokoHPApp = (function(){
 				InOutUtils.output("Generating HTML, please hold...");
 				toko = appwide_tokos[TokoUtils.binary_search_by_name(appwide_tokos, name)];
 				toko.construct_tiers(submis);
-				InOutUtils.output(HTMLGenn.get_html(toko, use_blocks, use_subcats));
+				var stuff = HTMLGenn.gen_journal(toko, use_blocks, use_subcats)
+				InOutUtils.output(stuff);
+				document.getElementById("preview").innerHTML = stuff;
 			} catch (err) {
 				console.error(err);
 				InOutUtils.error_out(err.message);

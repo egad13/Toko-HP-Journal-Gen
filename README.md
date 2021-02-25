@@ -8,7 +8,7 @@ For more detail on what this program is meant to do, read the [Project Specifica
 
 The latest version of this project is live on [Github Pages](https://egad13.github.io/Toko-HP-Journal-Gen/).
 
-To use the program without an internet connection, download the source code and open index.html to run it.
+Because the app needs to make API calls to Deviantart to run, it can no longer be run from your local computer due to CORS errors. This may be patched in future versions.
 
 ## Documentation
 
