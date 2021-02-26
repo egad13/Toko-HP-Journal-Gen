@@ -26,29 +26,25 @@ In order, these tiers are:
 * **Dominant to Alpha** - *HP Max: 300* - If a Tokota is *not* born submissive, this will be the second tier in its HP Journal. If it *is* born submissive, this will be the third tier.
 * **Extra Slots** - *HP Max: 100* - There may be any amount of Extra Slot categories, as they exist to accommodate HP totals that exceed the previous tiers.
 
-The main unit of an HP Journal is a piece of artwork, otherwise known as a **Thumbnail**. Packaged with the actual artwork is the integer HP value the piece gave the Tokota, and a short description of what aspects of the work gave it that HP value.
+The main unit of an HP Journal is a piece of **Artwork**. A piece of artwork is made up of several things: a link to a piece of art/literature on deviantart, the integer HP value the piece gave the Tokota, and a short description of what aspects of the work gave it that HP value.
 
-If the user chooses, each Thumbnail can also have an associated subcategory. The final journal will organize each larger tier via the subcategories, for an extra level of organization in the document.
+If the user chooses, each Artwork can also have an associated subcategory. The final journal will organize each larger tier via the subcategories, for an extra level of organization in the document.
 
-Notably, if the total HP of the Thumbnails included in a tier exceed the tier's Hp Maximum, the tier's total is reset to the maximum, and the overflow is transferred to the next tier.
+If the total HP of the Artworks included in a tier exceed the tier's HP Maximum, the next tier's total will include the amount by which that tier overflowed, and the overflow amount will be noted at the beginning of the next tier.
 
 The journal must also include a grand total, ie the total number of HP across all tiers.
 
 ## Program Input
 
-The input to this program will be a series of specifically structured strings which represent a single piece of artwork, or Thumb, and names the Tokotas which appear in it.
+The input to this program will be a .csv document where each line represents a single piece of Artwork and names all tokotas present in that Artwork.
 
-The format of a valid string is:
+The first line of the document will be assumed to be headers and will be ignored, and each of the rest of the lines of the document will follow the format:
 
-`:thumb000000000:,some description of hp breakdown,0,subcategory name,toko name,toko name,toko name...`
-
-Each string must be separated by a newline character, and an empty line will be treated as the end of input.
-
-This input can be provided via a .csv document. It is assumed that the input file will have the first row occupied with column headers, and so the first row of input will always be ignored.
+`link to a piece of art,some description of hp breakdown,HP value,subcategory name,toko name,toko name,toko name...`
 
 ## Program Output
 
-An HP Journal must be uploaded to the site the game takes place on, deviantART. Documents on deviantART are styled with HTML and CSS, so this program outputs HP Journals with appropriate HTML formatting.
+An HTML formatted HP Journal, to be displayed on deviantart or on another site which accepts custom HTML.
 
 The general format that is followed is:
 
@@ -56,8 +52,8 @@ The general format that is followed is:
 * All tiers, in the order described above. Each tier must be formatted as such:
  * The tier's name and total, in h2 tags.
  * If the previous tier had overflow, note the amount carried over from the previous tier, as centered body text.
- * The complete list of Thumbnails included in the tier and their relevant HP information. Thumbnails will always appear sorted by subcategory; if no subcategories were entered in the input, they will retain the ordering they had in the input sequence. This list of Thumbnails will be formatted as such:
+ * The complete list of Artworks included in the tier and their relevant HP information. Artworks will always appear sorted by subcategory; if no subcategories were entered in the input, they will retain the ordering they had in the input sequence. This list of Artworks will be formatted as such:
    * If subcategory headers were requested, each subcategory will be marked by its title and subtotal, in h3 tags.
-   * Individual Thumbnails will appear one of two ways:
-     * If the user requested Thumbnails be in blockquote format, then the Thumbnail will be displayed with its HP and HP Breakdown inside blockquote tags.
-     * If the user did not request blockquote format, each Thumbnail will appear in a centered div tag.
+   * Individual Artworks will appear one of two ways:
+     * If the user requested Artworks be in blockquote format, then the Artwork will be displayed with its HP and HP Breakdown inside blockquote tags.
+     * If the user did not request blockquote format, each Artwork will appear in a div tag styled to be an inline block, so that Artworks will tile within the available space.
