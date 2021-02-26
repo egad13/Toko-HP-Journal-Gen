@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.1
+ * @version 1.1.2
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -351,7 +351,7 @@ var TokoHPApp = (function(){
 				for (var i = 0; i < toko.tiers().length; i += 1) {
 					tier = toko.tiers()[i];
 					// tier header
-					var result = `<h2>${tier.name()} (Total = ${tier.hp_total()} HP)</h2><br/>`;
+					var result = `${result}<h2>${tier.name()} (Total = ${tier.hp_total()} HP)</h2><br/>`;
 					if (tier.overflow_from_prev() > 0){
 						result = `${result}Carried over from previous section: ${tier.overflow_from_prev()} HP<br/>`;
 					}
