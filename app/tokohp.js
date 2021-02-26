@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.3
+ * @version 1.1.4
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -337,7 +337,7 @@ var TokoHPApp = (function(){
 				var oembedurl;
 				var ajax_calls = [];
 				var ajax_codes = [];
-				var start = "<div align=\"center\" style=\"display:inline-block;max-width:300px\">";
+				var start = "<div align=\"center\" style=\"display:inline-block;vertical-align:top;max-width:300px;margin:10px\">";
 				var end = "</div>";
 				var result = `<div align ="center"><h3>Grand Total = ${toko.grand_total()} HP</h3></div><br/><br/>`;
 			
@@ -397,7 +397,7 @@ var TokoHPApp = (function(){
 						if (json.type === "photo"){
 							result = result.replace(ajax_codes[k], `<img style="width:auto" src="${json.thumbnail_url}" />`);
 						} else if (json.type === "rich"){
-							result = result.replace(ajax_codes[k], `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,200)}...</p></div>`);
+							result = result.replace(ajax_codes[k], `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,150)}...</p></div>`);
 						}
 					}
 					callback(result);
