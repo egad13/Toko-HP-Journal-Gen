@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.0.4
+ * @version 1.1.1
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -301,37 +301,10 @@ var TokoHPApp = (function(){
 	/////////////// SINGLETON CLASSES ///////////////
 	/////////////////////////////////////////////////
 
-	/** A singleton used to generate HP journals from Toko objects.
+	/** Generates HP journals from Toko objects.
 	 * @namespace
 	 * @memberof TokoHPApp */
 	var HTMLGenn = (function () {
-		
-		/** Given the URL for a piece of art on Deviantart, queries the
-		 * Deviantart oEmbed API for information about the piece.
-		 * @returns {Object} An object containing info about a piece of art on
-		 * Deviantart. Follows oEmbed response specifications.
-		 * @param {string} url - A valid Deviantart URL.
-		 * @private
-		 * @memberof TokoHPApp.HTMLGenn */
-		function get_devart_json(url){
-			//var cors = "https://cors-anywhere.herokuapp.com/";
-			var oembedUrl = //cors+
-				"https://backend.deviantart.com/oembed?type=json&url="
-				+encodeURIComponent(url);
-			var response;
-		
-			var req = new XMLHttpRequest();
-			req.open("GET", oembedUrl, false);
-			req.setRequestHeader('Content-Type', 'application/json');
-			req.onreadystatechange = function(){
-				if(req.readyState === 4){
-					response = JSON.parse(req.responseText);
-				}
-			};
-			req.send();
-			
-			return response;
-		}
 		
 		/** @returns {boolean} Whether or not the given url leads to a piece of
 		 * art on Deviantart.
@@ -343,84 +316,92 @@ var TokoHPApp = (function(){
 				.test(url);
 		}
 
-		/** @returns {string} an HTML string representing a single Artwork.
-		 * @param {boolean} block - If true, Artworks are formatted with
-		 * blockquotes. If false, Artworks are centered.
-		 * @param {TokoHPApp.Artwork} art - The Artwork to generate HTML for.
-		 * @private
-		 * @memberof TokoHPApp.HTMLGenn */
-		function build_artwork_str(block, art) {
-			var start = "<div align=\"center\">";
-			var end = "</div><br/><br/>";
-			var content;
-			var json;
-			
-			// optional blockquote formatting
-			if (block === true){
-				start = "<blockquote>";
-				end = "</blockquote>";
-			}
-			
-			// deviantart embeds
-			if (is_url_devart(art.url()) === true){
-				json = get_devart_json(art.url());
-				if (json.type === "photo"){
-					content = `<img style="width:auto" src="${json.thumbnail_url}" />`;
-				} else if (json.type === "rich"){
-					content = `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,200)}...</p></div>`;
-				}
-			}
-			// bonuses with no visuals - just a simple link
-			else {
-				content = art.url();
-			}
-			
-			return `${start}<a href="${art.url()}">${content}</a><br/><b>Total = ${art.hp()} HP</b><br/>${art.description()}${end}`;
-		}
-
-		/** @returns {string} an HTML string representing a Tier object.
-		 * @param {boolean} block - If true, Artworks are formatted with
-		 * blockquotes. If false, Artworks are centered.
-		 * @param {boolean} subcat - Whether or not the Tier should include
-		 * subcategory headers.
-		 * @param {TokoHPApp.Tier} tier - The Tier to generate HTML for.
-		 * @private
-		 * @memberof TokoHPApp.HTMLGenn */
-		function build_tier_str(block, subcat, tier) {
-			// tier header
-			var result = `<h2>${tier.name()} (Total = ${tier.hp_total()} HP)</h2><br/>`;
-			if (tier.overflow_from_prev() > 0){
-				result = `${result}Carried over from previous section: ${tier.overflow_from_prev()} HP<br/>`;
-			}
-			// artwork
-			var cur_subcat = "";
-			for (var i = 0; i < tier.artwork().length; i += 1){
-				// include subcategory headers, if that was requested.
-				if (subcat === true && cur_subcat !== tier.artwork()[i].subcategory()){
-					cur_subcat = tier.artwork()[i].subcategory();
-					result = `${result}<h3>${cur_subcat} | Total = ${tier.hp_subtotal()[cur_subcat]} HP</h3>`;
-				}
-				result = `${result}${build_artwork_str(block, tier.artwork()[i])}`;
-			}
-			return result;
-		}
-
-		
 		// PUBLIC METHODS
 		return {
-			/** @returns {string} HTML formatted HP journal for the given Toko.
+			/** Generates an HTML formatted HP journal for the given Toko, then
+			 * passes it to the given callback function.
 			 * @param {TokoHPApp.Toko} toko - The Toko to generate HTML for.
 			 * @param {boolean} block - If true, Artworks are formatted with
 			 * blockquotes. If false, Artworks are centered.
 			 * @param {boolean} subcat - If true, subtotals for Artwork
 			 * subcategories are included.
+			 * @param {function(string):void} callback - A function which takes
+			 * one string argument, to be called when the HTML has finished
+			 * generating.
 			 * @memberof TokoHPApp.HTMLGenn */
-			gen_journal: function(toko, block, subcat) {
+			gen_journal: function(toko, block, subcat, callback) {
+				var tier;
+				var art;
+				var cur_subcat;
+				var content;
+				var oembedurl;
+				var ajax_calls = [];
+				var ajax_codes = [];
+				var start = "<div align=\"center\">";
+				var end = "</div><br/><br/>";
 				var result = `<div align ="center"><h3>Grand Total = ${toko.grand_total()} HP</h3></div><br/><br/>`;
-				for (var i = 0; i < toko.tiers().length; i += 1) {
-					result = `${result}${build_tier_str(block, subcat, toko.tiers()[i])}`;
+			
+				// optional blockquote formatting
+				if (block === true){
+					start = "<blockquote>";
+					end = "</blockquote>";
 				}
-				return result;
+				
+				// tier loop
+				for (var i = 0; i < toko.tiers().length; i += 1) {
+					tier = toko.tiers()[i];
+					// tier header
+					var result = `<h2>${tier.name()} (Total = ${tier.hp_total()} HP)</h2><br/>`;
+					if (tier.overflow_from_prev() > 0){
+						result = `${result}Carried over from previous section: ${tier.overflow_from_prev()} HP<br/>`;
+					}
+					
+					// artwork loop
+					cur_subcat = "";
+					for (var j = 0; j < tier.artwork().length; j += 1){
+						art = tier.artwork()[j];
+						// include subcategory headers, if that was requested.
+						if (subcat === true && cur_subcat !== tier.artwork()[j].subcategory()){
+							cur_subcat = tier.artwork()[j].subcategory();
+							result = `${result}<h3>${cur_subcat} | Total = ${tier.hp_subtotal()[cur_subcat]} HP</h3>`;
+						}
+						
+						// deviantart embeds
+						if (is_url_devart(art.url()) === true){
+							content = `t${i}_a${j}`;
+							oembedurl = 
+							"https://backend.deviantart.com/oembed?format=jsonp&callback=?&url="
+								+encodeURIComponent(art.url());
+							ajax_codes.push(content);
+							ajax_calls.push(
+								$.ajax({
+									dataType: "json",
+									type: "GET",
+									url: oembedurl
+								})
+							);
+						}
+						// bonuses with no visuals - just a simple link
+						else {
+							content = art.url();
+						}
+						result = `${result}${start}<a href="${art.url()}">${content}</a><br/><b>Total = ${art.hp()} HP</b><br/>${art.description()}${end}`;
+					} // end of artwork loop
+				} // end of tier loop
+				
+				// when all api calls are done, add the proper embeds to the html, then call back
+				$.when.apply($, ajax_calls).done( function(){
+					var json;
+					for (var k = 0; k < ajax_calls.length; k += 1){
+						json = ajax_calls[k].responseJSON;
+						if (json.type === "photo"){
+							result = result.replace(ajax_codes[k], `<img style="width:auto" src="${json.thumbnail_url}" />`);
+						} else if (json.type === "rich"){
+							result = result.replace(ajax_codes[k], `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,200)}...</p></div>`);
+						}
+					}
+					callback(result);
+				});
 			}
 		};
 	}());
@@ -638,9 +619,10 @@ var TokoHPApp = (function(){
 				InOutUtils.output("Generating HTML, please hold...");
 				toko = appwide_tokos[TokoUtils.binary_search_by_name(appwide_tokos, name)];
 				toko.construct_tiers(submis);
-				var stuff = HTMLGenn.gen_journal(toko, use_blocks, use_subcats)
-				InOutUtils.output(stuff);
-				document.getElementById("preview").innerHTML = stuff;
+				
+				HTMLGenn.gen_journal(toko, use_blocks, use_subcats, function(html){
+					InOutUtils.output(html);
+				});
 			} catch (err) {
 				console.error(err);
 				InOutUtils.error_out(err.message);

@@ -5,7 +5,8 @@
   <title>Tokotas HP Journal Generator</title>
   <link rel="stylesheet" href="view.css?v=1">
   <script type="text/javascript" src="lib/accordian.js"></script>
-  <script type="text/javascript" src="app/tokohp.js?v=1.0.4"></script>
+  <script type="text/javascript" src="lib/jquery-3.5.1.min.js"></script>
+  <script type="text/javascript" src="app/tokohp.js?v=1.1.1"></script>
 </head>
 
 
@@ -64,8 +65,6 @@
   <div>
     <textarea readonly id="output">Pick a file to begin.</textarea>
   </div>
-  
-  <div id="preview"></div>
 
   <hr/>
 
@@ -184,8 +183,9 @@
             Otherwise, leave it unchecked.
           </li>
           <li>
-            If your journal skin has coded boxes that use the blockquote tag,
-            check the 'Use blockquotes' box. Otherwise, leave it unchecked.
+            Art embeds are formatted as centered divs by default. If you want
+			them to be wrapped in blockquote tags instead, check the 'Use
+			blockquotes' box.
           </li>
           <li>
             If you used subcategories, check the 'Use subcategory headers' box.
@@ -193,8 +193,7 @@
           </li>
           <li>Press Generate HTML and copy the code.</li>
           <li>
-            Create or edit a deviantART or stash journal, go to Edit > Switch to
-            HTML mode, and paste in your generated HTML.
+            Paste your generated HTML wherever you keep your HP journals.
           </li>
         </ol>
       </div>
@@ -210,7 +209,7 @@
   <hr/>
 
   <footer role="contentinfo" class="smalltext">
-    Version 1.1.0 | Latest Update: 25 February, 2021, 3:30 PM EST
+    Version 1.1.1 | Latest Update: 25 February, 2021, 7:10 PM EST
   </footer>
 
 </body>
