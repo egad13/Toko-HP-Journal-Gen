@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.2
+ * @version 1.1.3
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -337,8 +337,8 @@ var TokoHPApp = (function(){
 				var oembedurl;
 				var ajax_calls = [];
 				var ajax_codes = [];
-				var start = "<div align=\"center\">";
-				var end = "</div><br/><br/>";
+				var start = "<div align=\"center\" style=\"display:inline-block;max-width:300px\">";
+				var end = "</div>";
 				var result = `<div align ="center"><h3>Grand Total = ${toko.grand_total()} HP</h3></div><br/><br/>`;
 			
 				// optional blockquote formatting
