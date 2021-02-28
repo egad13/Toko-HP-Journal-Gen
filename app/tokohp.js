@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.4
+ * @version 1.1.5
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -337,6 +337,7 @@ var TokoHPApp = (function(){
 				var oembedurl;
 				var ajax_calls = [];
 				var ajax_codes = [];
+				var ajax_urls = [];
 				var start = "<div align=\"center\" style=\"display:inline-block;vertical-align:top;max-width:300px;margin:10px\">";
 				var end = "</div>";
 				var result = `<div align ="center"><h3>Grand Total = ${toko.grand_total()} HP</h3></div><br/><br/>`;
@@ -372,6 +373,7 @@ var TokoHPApp = (function(){
 							oembedurl = 
 							"https://backend.deviantart.com/oembed?format=jsonp&callback=?&url="
 								+encodeURIComponent(art.url());
+							ajax_urls.push(art.url());
 							ajax_codes.push(content);
 							ajax_calls.push(
 								$.ajax({
@@ -398,6 +400,13 @@ var TokoHPApp = (function(){
 							result = result.replace(ajax_codes[k], `<img style="width:auto" src="${json.thumbnail_url}" />`);
 						} else if (json.type === "rich"){
 							result = result.replace(ajax_codes[k], `<div style="display:inline-block;width:250px;border:1px solid black;padding:5px"><p><b>${json.title}</b></p><p>${json.html.substring(0,150)}...</p></div>`);
+						// if the API tossed us an error, make a text link
+						// instead of an embed, and inform the user at the top
+						// of the output that something has gone wrong.
+						} else if (json.error !== undefined && json.error !== null) {
+							console.log(json);
+							result = result.replace(ajax_codes[k], ajax_urls[k]);
+							result = `An error occurred when trying to get the deviation with url ${ajax_urls[k]}&#10;Error: ${json.error}. Message: ${json.message}.&#10;&#10;${result}`;
 						}
 					}
 					callback(result);
@@ -469,7 +478,7 @@ var TokoHPApp = (function(){
 			 * and puts an error message in the page's output area.
 			 * @param {string} str - The error message to output to the page.
 			 * @memberof TokoHPApp.InOutUtils */
-			error_out: function(str) {
+			fatal_error: function(str) {
 				document.getElementById("form").reset();
 				document.getElementById("genhtml").disabled = true;
 				document.getElementById("names").innerHTML = "";
@@ -516,7 +525,7 @@ var TokoHPApp = (function(){
 						
 						//handle errors
 						if (line[2].length === 0 || number_regex.test(line[2]) === false) {
-							InOutUtils.error_out("HP value at line " + (i+1)
+							InOutUtils.fatal_error("HP value at line " + (i+1)
 							+ " is either empty or contains non-numerical\ncharacters. "
 							+ "Please fix the issue and try again.");
 							return null;
@@ -570,14 +579,14 @@ var TokoHPApp = (function(){
 			var new_option;
 
 			if (InOutUtils.has_valid_ext(filepicker.value, ".csv") === false) {
-				InOutUtils.error_out("Invalid file type. Please choose a Comma Separated Document (.csv)");
+				InOutUtils.fatal_error("Invalid file type. Please choose a Comma Separated Document (.csv)");
 				return;
 			}
 
 			reader = new FileReader();
 			reader.onerror = function(evt) {
 				console.log(evt);
-				InOutUtils.error_out(reader.error);
+				InOutUtils.fatal_error(reader.error);
 				reader.abort();
 			};
 			reader.onloadstart = function() {
@@ -625,7 +634,7 @@ var TokoHPApp = (function(){
 				});
 			} catch (err) {
 				console.error(err);
-				InOutUtils.error_out(err.message);
+				InOutUtils.fatal_error(err.message);
 			}
 		}
 	};
