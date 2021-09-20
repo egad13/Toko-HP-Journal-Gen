@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.5
+ * @version 1.1.6
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -276,6 +276,7 @@ var TokoHPApp = (function(){
 			 * @method 
 			 * @memberOf TokoHPApp.Toko */
 			construct_tiers: function (sub) {
+				console.log(sub);
 				tiers = [];
 				var idx = 0;
 
@@ -423,18 +424,18 @@ var TokoHPApp = (function(){
 		// PUBLIC METHODS
 		return {
 			/** A helper function for array sorting. Sorts Toko objects
-			 * alphabetically by name.
+			 * alphabetically by name. CASE SENSITIVE.
 			 * @memberof TokoHPApp.TokoUtils */
 			sort_by_name: function(a, b){
-				var nameA = a.name().toUpperCase();
-				var nameB = b.name().toUpperCase();
+				var nameA = a.name();
+				var nameB = b.name();
 				if(nameA < nameB) { return -1; }
 				if(nameA > nameB) { return 1; }
 				return 0;
 			},
 			
 			/** Given an array of sorted Tokos and a name, searches for
-			 * the Toko with that name.
+			 * the Toko with that name. CASE SENSITIVE.
 			 * @returns {number} the array index of the specified Toko. If the
 			 * Toko was not found, returns -1.
 			 * @param {TokoHPApp.Toko[]} arr - The array of Tokos to search.
@@ -444,7 +445,7 @@ var TokoHPApp = (function(){
 				var min = 0;
 				var max = arr.length - 1;
 				var idx;
-
+				
 				while (min <= max) {
 					idx = Math.floor((max + min) / 2);
 					if (arr[idx].name() === name) {
@@ -536,6 +537,7 @@ var TokoHPApp = (function(){
 
 						//if there's a new name on this line, create a Toko object for it
 						for (var j = 4; j < line.length; j += 1) {
+							
 							line[j] = line[j].trim();
 							if (line[j].length !== 0 && whitespace_regex.test(line[j]) === false){
 								idx = TokoUtils.binary_search_by_name(tokos, line[j]);
@@ -544,6 +546,7 @@ var TokoHPApp = (function(){
 									tokos.sort(TokoUtils.sort_by_name);
 								}
 							}
+							
 						}
 
 						//give the new thumbnail to all the tokos associated with it
