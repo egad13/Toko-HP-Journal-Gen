@@ -2,7 +2,7 @@
  * @file Contains the Toko-HP-Journal-Gen app.<br/><br/> For detailed context
  * on what the code in this app does, see docs/PROJECT_SPECIFICATIONS.md.
  * @author Erica G (egad13)
- * @version 1.1.6
+ * @version 1.1.7
  */
 
 // TODO figure out how to more safely parse the CSV input. quoted strings,
@@ -196,16 +196,31 @@ var TokoHPApp = (function(){
 		 * @const {number}
 		 * @private */
 		const SUB_MAX = 75;
+		
+		/** The maximum HP value the "Submissive to Average" Tier can hold when the Leadership/Inheritance option is true.
+		 * @const {number}
+		 * @private */
+		const SUB_MAX_LEADER = 50;
 
 		/** The maximum HP value the "Average to Dominant" Tier can hold.
 		 * @const {number}
 		 * @private */
 		const AVG_MAX = 250;
+		
+		/** The maximum HP value the "Average to Dominant" Tier can hold when the Leadership/Inheritance option is true.
+		 * @const {number}
+		 * @private */
+		const AVG_MAX_LEADER = 200;
 
 		/** The maximum HP value the "Dominant to Alpha" Tier can hold.
 		 * @const {number}
 		 * @private */
 		const DOM_MAX = 300;
+		
+		/** The maximum HP value the "Dominant to Alpha" Tier can hold when the Leadership/Inheritance option is true.
+		 * @const {number}
+		 * @private */
+		const DOM_MAX_LEADER = 250;
 
 		/** The maximum HP value the "Extra Slot" Tiers can hold.
 		 * @const {number}
@@ -272,22 +287,28 @@ var TokoHPApp = (function(){
 			 * This must be called before the HTML for this Toko is generated.
 			 * @param {boolean} sub - Whether or not this Toko should include
 			 * a "Submissive to Average" Tier.
+			 * @param {boolean} leader - If true, this Toko's tier's hp limits
+			 * should be the leadership/inheritance totals (50/200/250/100). If
+			 * false, they should be the regular totals (75/250/300/100).
 			 * @instance
 			 * @method 
 			 * @memberOf TokoHPApp.Toko */
-			construct_tiers: function (sub) {
-				console.log(sub);
+			construct_tiers: function (sub, leader) {
 				tiers = [];
 				var idx = 0;
+				var max;
 
 				if (sub === true) {
-					idx = create_tier("Submissive to Average", SUB_MAX, idx);
+					max = (leader === true ? SUB_MAX_LEADER : SUB_MAX);
+					idx = create_tier("Submissive to Average", max, idx);
 				}
 				if (idx < artwork.length) {
-					idx = create_tier("Average to Dominant", AVG_MAX, idx);
+					max = (leader === true ? AVG_MAX_LEADER : AVG_MAX);
+					idx = create_tier("Average to Dominant", max, idx);
 				}
 				if (idx < artwork.length) {
-					idx = create_tier("Dominant to Alpha", DOM_MAX, idx);
+					max = (leader === true ? DOM_MAX_LEADER : DOM_MAX);
+					idx = create_tier("Dominant to Alpha", max, idx);
 				}
 				for (var i = 1; idx < artwork.length; i += 1) {
 					idx = create_tier("Extra Slots "+i, EXTRA_MAX, idx);
@@ -623,14 +644,15 @@ var TokoHPApp = (function(){
 			var toko;
 			var e = document.getElementById("names");
 			var name = e.options[e.selectedIndex].value;
-			var submis = document.getElementById("submis").checked;
+			var is_submis = document.getElementById("submis").checked;
 			var use_subcats = document.getElementById("subcat").checked;
 			var use_blocks = document.getElementById("block").checked;
+			var is_leader = document.getElementById("leadership").checked;
 			
 			try {
 				InOutUtils.output("Generating HTML, please hold...");
 				toko = appwide_tokos[TokoUtils.binary_search_by_name(appwide_tokos, name)];
-				toko.construct_tiers(submis);
+				toko.construct_tiers(is_submis, is_leader);
 				
 				HTMLGenn.gen_journal(toko, use_blocks, use_subcats, function(html){
 					InOutUtils.output(html);

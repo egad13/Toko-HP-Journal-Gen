@@ -1,6 +1,6 @@
 # Toko-HP-Journal-Gen
 
-An HTML generator custom made for the Tokotas ARPG. This simple-to-use website will take your database of Tokotas, and allow you to generate a pre-formatted HP Journal for any of your Tokotas with the click of a button! It should save you lots of time and maybe even some visits to corrections.
+An HTML generator custom made for the Tokotas ARPG. This simple-to-use website will take a spreadsheet of artworks and the Tokotas which appear in them, and allow you to generate a pre-formatted HP Journal for any of Tokota in the file with the click of a button! It should save you lots of time and maybe even some visits to corrections.
 
 For more detail on what this program is meant to do, read the [Project Specifications](https://github.com/egad13/Toko-HP-Journal-Gen/tree/master/docs/PROJECT_SPECIFICATIONS.md).
 
@@ -8,15 +8,11 @@ For more detail on what this program is meant to do, read the [Project Specifica
 
 The latest version of this project is live on [Github Pages](https://egad13.github.io/Toko-HP-Journal-Gen/).
 
-To run offline, just download the source code and open index.html in your browser.
+To run it offline, just download the source code and open `index.html` in your browser.
 
 ## Documentation
 
 The docs can be viewed [Here](https://egad13.github.io/Toko-HP-Journal-Gen/docs/code_documentation/index.html)
-
-## Versioning
-
-I use [SemVer](http://semver.org/) for versioning. Only the most recent version will be live as a website; see [the tags on this repository](https://github.com/egadG13/Toko-HP-Journal-Gen/tags) for older versions.
 
 ## Authors
 
